@@ -1,0 +1,197 @@
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+}
+
+h1 {
+  text-align: center;
+}
+
+input,
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  color: #0f0f0f;
+  background-color: #ffffff;
+  transition: border-color 0.25s;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: #396cd8;
+}
+button:active {
+  border-color: #396cd8;
+  background-color: #e8e8e8;
+}
+
+input,
+button {
+  outline: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  a:hover {
+    color: #24c8db;
+  }
+
+  input,
+  button {
+    color: #ffffff;
+    background-color: #0f0f0f98;
+  }
+  button:active {
+    background-color: #0f0f0f69;
+  }
+}
+
+/* ------------ My Styles --------------- */
+
+/* filters for svgs from https://codepen.io/sosuke/pen/Pjoqqp */
+
+[theme-mode="light"] {
+  --background-color: #d9d9d9;
+  --tertiary-color: #e2e2e2; 
+  --secondary-color: #ebebeb;
+  --primary-color: #f5f5f5;
+  --text-color-1: #5b5b5b;
+  --text-color-2: #000000; 
+  --filter-text-color-1: invert(40%) sepia(0%) saturate(1031%) hue-rotate(163deg) brightness(81%) contrast(80%);
+  --filter-text-color-2: invert(0%) sepia(4%) saturate(0%) hue-rotate(337deg) brightness(100%) contrast(107%);
+}
+
+[theme-mode="dark"] {
+  --background-color: #222222;
+  --tertiary-color: #272727;
+  --secondary-color: #2d2d2d;
+  --primary-color: #323232;
+  --text-color-1: #969696;
+  --text-color-2: #f6f6f6;
+  --filter-text-color-1: invert(62%) sepia(1%) saturate(0%) hue-rotate(32deg) brightness(99%) contrast(82%);
+  --filter-text-color-2: invert(99%) sepia(3%) saturate(40%) hue-rotate(1deg) brightness(114%) contrast(93%); 
+}
+
+:root {
+  height:100vh;
+  width: 100vw;
+  overflow: scroll;
+  
+  /* My Vars */
+  --accent-color: #348ce5;
+  color: var(--text-color-2);
+  background-color: var(--background-color);
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+}
+
+/* Header Styles */
+
+.header {
+  background-color: var(--accent-color);
+  height: 4em;
+}
+
+.header h1 {
+  padding: .75em;
+  margin: 0;
+}
+
+/* Navigation Styles */
+
+nav {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    background-color: var(--primary-color);
+    height: 100%;
+    padding-top: 1em;
+    overflow: scroll;
+}
+
+nav a {
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 2.5em;
+  text-decoration: inherit;
+  color: var(--text-color-1);
+  padding: 0 .75em;
+}
+
+nav a span {
+  padding-left: .75em;
+}
+
+nav a.active{
+  color: var(--text-color-2);
+  border-left: .2em solid var(--accent-color);
+  padding: 0 .75em 0 0.55em;
+}
+
+nav a:hover {
+  color: var(--text-color-2);
+}
+
+nav a img.icon {
+  height: 1.5em;
+  width: 1.5em;
+  vertical-align: middle;
+  filter: var(--filter-text-color-1);
+}
+
+nav a.active img.icon {
+  filter: var(--filter-text-color-2);
+}
+
+nav a:hover img.icon {
+  filter: var(--filter-text-color-2);
+}
+
+/* Page content */
+
+.container {
+  display: flex;
+  flex-direction: row;
+  /* 
+    Hack but height:100% overflows likely due to flex
+    5em comes from 1em padding from nav + 4em height from header
+  */
+  height: calc(100vh - 5em); 
+}
+
+.content {
+  margin: 2em auto 0 auto;
+  text-align: center;
+}
+
+.page_content {
+  margin: 1em;
+}
