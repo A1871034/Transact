@@ -37,7 +37,8 @@ function App() {
     "path": string,
     "icon": string,
     "name": string,
-    "component": Component<RouteSectionProps<void>> | undefined
+    "component": Component<RouteSectionProps<void>> | undefined,
+    "class"?: string
   }
   var navItems: {[id:string] : navItem } = {
     "/home": {
@@ -105,6 +106,7 @@ function App() {
       "icon": "/icons/gear-solid.svg",
       "name": "Settings",
       "component": Settings,
+      "class": "float-bottom"
     },
   }
 
@@ -127,7 +129,7 @@ function App() {
         <nav>
           <For each={Object.values(navItems)}>
           {(item, _) => (
-            <A href={item.path}><img src={item.icon} class="icon" />{showNavLabels() ? (<span>{item.name}</span>) : ""}</A>
+            <A class={item.class !== undefined ? item.class : ""} href={item.path}><img src={item.icon} class={"icon"} />{showNavLabels() ? (<span>{item.name}</span>) : ""}</A>
           )}
           </For>
         </nav>
