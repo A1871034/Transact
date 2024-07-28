@@ -21,20 +21,18 @@ function overlayEscapeClose(e: any) {
 function showOverlay(label: string, elements: any) {
     setOverlayContent(elements);
     setLabel(label);
+    document.removeEventListener("keyup", overlayEscapeClose)
     document.addEventListener("keyup", overlayEscapeClose);
     document.getElementById("overlay")?.removeAttribute("hidden");
 }
 
 function Overlay() {
-    
-
     function pressedElementClose(this: any, e: any) {
         if (e.target !== e.currentTarget) {
             return;
         }
         closeOverlay();
     }
-
 
     const [maxMinSrc, setMaxMinSrc] = createSignal("/icons/expand-solid.svg");
     function toggleMaximise() {
