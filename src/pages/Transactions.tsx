@@ -3,8 +3,9 @@ import "../styles/Transactions.css";
 import { invoke } from "@tauri-apps/api/tauri";
 import { createSignal, For } from "solid-js";
 
-import { showIdeaPopup } from "./Idea";
-
+import { showIdeaOverlay } from "./Idea";
+import { showEntityOverlay } from "./Entity";
+import { showTransactionOverlay } from "./Transaction";
 
 interface TransactionFE {
     m_idea_id: number,
@@ -36,10 +37,10 @@ function Transactions() {
                 </tr>
                 <For each={transactions()}>
                 {(item:TransactionFE, index) => (
-                    <tr>
-                        <td><span onclick={() => {showIdeaPopup(item.m_idea_id + index())}} class="interactive">{item.m_idea_name}</span></td>
+                    <tr onclick={() => {showTransactionOverlay(item.m_transaction_id + index())}}>
+                        <td><span onclick={(e) => {e.stopPropagation(); showIdeaOverlay(item.m_idea_id + index())}} class="interactive">{item.m_idea_name}</span></td>
                         <td>{item.m_transaction_summary}</td>
-                        <td><span class="interactive">{item.m_entity_name}</span></td>
+                        <td><span onclick={(e) => {e.stopPropagation(); showEntityOverlay(item.m_entity_id + index())}} class="interactive">{item.m_entity_name}</span></td>
                         <td>{item.m_datetime}</td>
                     </tr>
                 )}
