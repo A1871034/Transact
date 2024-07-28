@@ -1,4 +1,4 @@
-import "./App.css";
+import "./styles/App.css";
 
 import { createEffect, createSignal, For } from "solid-js";
 import { Router, Route, A, RouteSectionProps} from "@solidjs/router";
@@ -28,7 +28,7 @@ export function toggleNavLabels() {
 /* Main app */
 function App() {
   /* Hack to avoid implemening my own router as all parent urls are "active" eg,
-    at "localhost/transactions", "localhost/" is also active 
+    at "localhost/log", "localhost/" is also active 
     The hack redirects "/" to "/home" without reloading to avoid loops */
   window.history.replaceState(null, "", "/home");
 
@@ -49,9 +49,15 @@ function App() {
     },
     "/transactions": {
       "path": "/transactions",
-      "icon": "/icons/list-ul-solid.svg",
+      "icon": "/icons/arrow-right-arrow-left-solid.svg",
       "name": "Transactions",
       "component": Transactions,
+    },
+    "/ideas": {
+      "path": "/ideas",
+      "icon": "/icons/list-ul-solid.svg",
+      "name": "Ideas",
+      "component": undefined,
     },
     "/income": {
       "path": "/income",
@@ -75,6 +81,12 @@ function App() {
       "path": "/accounts",
       "icon": "/icons/credit-card-solid.svg",
       "name": "Accounts",
+      "component": undefined,
+    },
+    "/entites": {
+      "path": "/entites",
+      "icon": "/icons/person-shelter-solid.svg",
+      "name": "Entites",
       "component": undefined,
     },
     "/jobs": {

@@ -99,6 +99,7 @@ button {
   
   /* My Vars */
   --accent-color: #348ce5;
+  /* --accent-hightlight-filter: invert(64%) sepia(64%) saturate(4659%) hue-rotate(188deg) brightness(91%) contrast(97%); */
   color: var(--text-color-2);
   background-color: var(--background-color);
 }
@@ -130,9 +131,9 @@ body {
 nav {
     display: flex;
     flex-direction: column;
-    width: fit-content;
+    min-width: fit-content;
     background-color: var(--primary-color);
-    height: 100%;
+    height: calc(100% - 1em);
     padding-top: 1em;
     overflow: scroll;
 }
@@ -186,16 +187,97 @@ nav a:hover img.icon {
   flex-direction: row;
   /* 
     Hack but height:100% overflows likely due to flex
-    5em comes from 1em padding from nav + 4em height from header
+    4em comes from 4em height from header
   */
-  height: calc(100vh - 5em); 
+  height: calc(100vh - 4em); 
 }
 
 .content {
-  margin: 2em auto 0 auto;
   text-align: center;
+  width: 100%;
+  height: 100%;
 }
 
 .page_content {
   margin: 1em;
+}
+
+.dashboard-item {
+  border-radius: .5em;
+  margin: 1em;
+}
+
+.pannel {
+  height: 100%;
+  background-color: var(--secondary-color);
+}
+
+span.interactive:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Dashboard tiling */
+/*
+.tile-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-items: stretch;
+  align-content: stretch;
+}
+
+.tile {
+  flex-basis: content;
+}
+
+*/
+
+/* Table styling */
+
+table {
+  border-collapse: collapse;
+  --table-border-radius: 0.35em;
+}
+
+tr:first-child th:first-child, tr:first-child td:first-child {
+  border-radius: var(--table-border-radius) 0 0 0;
+}
+
+tr:first-child th:last-child, tr:first-child td:last-child {
+  border-radius: 0 var(--table-border-radius) 0 0;
+}
+
+tr:last-child th:first-child, tr:last-child td:first-child {
+  border-radius: 0 0 0 var(--table-border-radius);
+}
+
+tr:last-child th:last-child, tr:last-child td:last-child {
+  border-radius: 0 0 var(--table-border-radius) 0;
+}
+
+tr:nth-child(even) {
+  background-color: var(--secondary-color);
+}
+
+tr:nth-child(odd) {
+  background-color: var(--tertiary-color);
+}
+
+tr.table-header-row {
+  background-color: var(--accent-color);
+}
+
+tr.table-header-row > th {
+  padding: .3em;
+}
+
+td, th {
+  padding: .2em;
+}
+
+table.interactive tr:not(:first-child):hover {
+  cursor: pointer;
+  background-color: var(--primary-color);
 }
