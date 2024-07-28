@@ -56,7 +56,7 @@ div#overlay-content {
 }
 
 img#close-x {
-    margin: .25em;
+    padding: .25em;
 }
 
 div#overlay-window-controls {
