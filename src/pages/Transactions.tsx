@@ -3,7 +3,8 @@ import "../styles/Transactions.css";
 import { invoke } from "@tauri-apps/api/tauri";
 import { createSignal, For } from "solid-js";
 
-import { Idea, showIdeaPopup} from "./Idea";
+import { showIdeaPopup } from "./Idea";
+
 
 interface TransactionFE {
     m_idea_id: number,
@@ -18,7 +19,7 @@ const [transactions, setTransactions] = createSignal([]);
 async function get_transactions() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     setTransactions(await invoke("get_transactions"));
-    console.log(transactions());
+    console.debug("received transactions: ", transactions());
 }
 
 function Transactions() {
@@ -45,7 +46,6 @@ function Transactions() {
                 </For>
             </tbody>
         </table>
-        <Idea />
     </>
     )
 }

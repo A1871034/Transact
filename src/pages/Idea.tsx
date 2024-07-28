@@ -1,31 +1,11 @@
-import { createSignal } from "solid-js";
-import { render } from "solid-js/web";
-import Overlay from "../components/Overlay";
+import { showOverlay } from "../components/Overlay";
 
-const [ideaId, setIdeaId] = createSignal(-1);
-
-const idea = (
-    <>
-        <h1 style="background-color:var(--primary-color)">IDEA</h1>
-        <h2>ID: {ideaId()}</h2>
-    </>
-)
-const [overlayComponent, showOverlay] = Overlay(idea);
-
-function showIdeaPopup(idea_id: number) {
-    setIdeaId(idea_id);
-    showOverlay();
-}
-
-function Idea() {
-    return (
-    <>
-        {overlayComponent}
-    </>
+export function showIdeaPopup(idea_id: number) {
+    const Idea = (
+        <>
+            <h2>ID: {idea_id}</h2>
+        </>
     )
-}
 
-export { 
-    Idea,
-    showIdeaPopup
- };
+    showOverlay("Payslip", Idea);
+}

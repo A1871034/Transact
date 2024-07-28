@@ -4,15 +4,13 @@ import { createEffect, createSignal, For } from "solid-js";
 import { Router, Route, A, RouteSectionProps} from "@solidjs/router";
 import { Component } from "solid-js";
 
+import { Overlay } from "./components/Overlay";
 import Home from './pages/Home';
 import Transactions from './pages/Transactions'
 import Settings from "./pages/Settings";
 
 /* Themes */
 const [darkMode, setDarkMode] = createSignal(true);
-createEffect(() => {
-  document.documentElement.setAttribute("theme-mode", (darkMode()) ? "dark" : "light");
-});
 export function toggleTheme() {
   setDarkMode(!darkMode());
 }
@@ -27,6 +25,11 @@ export function toggleNavLabels() {
 
 /* Main app */
 function App() {
+  /* Themes reactivity*/
+  createEffect(() => {
+    document.documentElement.setAttribute("theme-mode", (darkMode()) ? "dark" : "light");
+  });
+
   /* Hack to avoid implemening my own router as all parent urls are "active" eg,
     at "localhost/log", "localhost/" is also active 
     The hack redirects "/" to "/home" without reloading to avoid loops */
@@ -141,7 +144,7 @@ function App() {
         <nav>
           <For each={Object.values(navItems)}>
           {(item, _) => (
-            <A class={item.class !== undefined ? item.class : ""} href={item.path}><img src={item.icon} class={"icon"} />{showNavLabels() ? (<span>{item.name}</span>) : ""}</A>
+            <A class={item.class !== undefined ? item.class : ""} href={item.path}><img src={item.icon} class="icon" />{showNavLabels() ? (<span>{item.name}</span>) : ""}</A>
           )}
           </For>
         </nav>
@@ -153,6 +156,7 @@ function App() {
   )
 
   return (
+    <>
       <Router root={rootApp}>
         <For each={Object.values(navItems)}>
         {(item, _) => (
@@ -160,6 +164,8 @@ function App() {
         )}
         </For>
       </Router>
+      <Overlay />
+    </>
   );
 }
 

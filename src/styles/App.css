@@ -165,7 +165,7 @@ nav a:hover {
   color: var(--text-color-2);
 }
 
-nav a img.icon {
+img.icon {
   height: 1.5em;
   width: 1.5em;
   vertical-align: middle;
@@ -181,6 +181,11 @@ nav a:hover img.icon {
 }
 
 /* Page content */
+
+img.icon.interactive:hover {
+  filter: var(--filter-text-color-2);
+  cursor: pointer;
+}
 
 .container {
   display: flex;
