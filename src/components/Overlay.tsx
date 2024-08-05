@@ -6,6 +6,7 @@ const [overlayContent, setOverlayContent] = createSignal(<></>)
 const [label, setLabel] = createSignal("");
 
 function closeOverlay() {
+    console.debug("closing overlay");
     document.getElementById("overlay")?.setAttribute("hidden", "");
     document.removeEventListener("keyup", overlayEscapeClose)
     setOverlayContent(<></>);
@@ -19,6 +20,7 @@ function overlayEscapeClose(e: any) {
 }
 
 function showOverlay(label: string, elements: any) {
+    console.debug(`showing overlay \"${label}\"`);
     setOverlayContent(elements);
     setLabel(label);
     document.removeEventListener("keyup", overlayEscapeClose)
@@ -27,6 +29,12 @@ function showOverlay(label: string, elements: any) {
 }
 
 function Overlay() {
+    /* Currently bugged in that if pressing on an element 
+     and dragging to outside before releasing
+     the overlay will close, unsure how to fix
+     initial attempts unsuccessful with trying to stop propagation
+     as opposed to current method of catching the propagation
+     */
     function pressedElementClose(this: any, e: any) {
         if (e.target !== e.currentTarget) {
             return;
@@ -54,8 +62,8 @@ function Overlay() {
                     <div id="overlay-banner">
                         <p><b>{label()}</b></p>
                         <div id="overlay-window-controls">
-                            <img src={maxMinSrc()} id="close-x" class="icon interactive" onclick={toggleMaximise}/>
-                            <img src="/icons/xmark-solid.svg" id="close-x" class="icon interactive" onclick={closeOverlay}/>
+                            <img src={maxMinSrc()} id="close-x" class="icon interactive" onclick={toggleMaximise} draggable="false"/>
+                            <img src="/icons/xmark-solid.svg" id="close-x" class="icon interactive" onclick={closeOverlay} draggable="false"/>
                         </div>
                     </div>
                     <div id="overlay-content">

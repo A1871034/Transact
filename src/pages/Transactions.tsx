@@ -1,5 +1,3 @@
-import "../styles/Transactions.css";
-
 import { invoke } from "@tauri-apps/api/tauri";
 import { createSignal, For } from "solid-js";
 

@@ -7,6 +7,8 @@ import { Component } from "solid-js";
 import { Overlay } from "./components/Overlay";
 import Home from './pages/Home';
 import Transactions from './pages/Transactions'
+import Ideas from './pages/Ideas';
+import Entities from './pages/Entities';
 import Settings from "./pages/Settings";
 
 /* Themes */
@@ -60,7 +62,7 @@ function App() {
       "path": "/ideas",
       "icon": "/icons/list-ul-solid.svg",
       "name": "Ideas",
-      "component": undefined,
+      "component": Ideas,
     },
     "/income": {
       "path": "/income",
@@ -90,7 +92,7 @@ function App() {
       "path": "/entites",
       "icon": "/icons/person-shelter-solid.svg",
       "name": "Entites",
-      "component": undefined,
+      "component": Entities,
     },
     "/jobs": {
       "path": "/jobs",
@@ -144,7 +146,7 @@ function App() {
         <nav>
           <For each={Object.values(navItems)}>
           {(item, _) => (
-            <A class={item.class !== undefined ? item.class : ""} href={item.path}><img src={item.icon} class="icon" />{showNavLabels() ? (<span>{item.name}</span>) : ""}</A>
+            <A class={item.class !== undefined ? item.class : ""} href={item.path} draggable="false"><img src={item.icon} class="icon" draggable="false"/>{showNavLabels() ? (<span>{item.name}</span>) : ""}</A>
           )}
           </For>
         </nav>
