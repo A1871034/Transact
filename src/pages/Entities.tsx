@@ -5,7 +5,7 @@ import { showEntityOverlay } from "./Entity";
 import { showNewEntityOverlay } from "./EntityNew";
 import { showTransactionOverlay } from "./Transaction";
 
-interface EntityFE {
+export interface EntityFE {
     m_id: number,
     m_name: string,
     m_description: string,
@@ -14,15 +14,23 @@ interface EntityFE {
     m_transactions: number,
     m_delta_value: number,
 }
-const [entity, setEntities] = createSignal([]);
-async function get_ideas() {
+export const [entities, setEntities] = createSignal([]);
+async function get_entities() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setEntities(await invoke("get_entities"));
-    console.debug("received entities: ", entity());
+    await invoke("get_entities")
+        .then((recv_entities) => {
+            if (recv_entities instanceof Array) {
+                setEntities(recv_entities as never[])
+                console.debug("received entities: ", entities());           
+            } else {
+                throw "Received entities was not an array"
+            }
+        })
+        .catch((error) => console.error(error));
 }
 
-function Ideas() {
-    get_ideas();
+function Entities() {
+    get_entities();
     return (
     <>
         <table class="dashboard-item interactive">
@@ -34,7 +42,7 @@ function Ideas() {
                 <col span="1" style="width: 17%;" />
                 <col span="1" style="width: 17%;" />
             </colgroup>
-            <tbody>
+            <thead>
                 <tr class="table-header-row">
                     <th>Name</th>
                     <th>Description</th>
@@ -42,12 +50,14 @@ function Ideas() {
                     <th>Delta Value</th>
                     <th>Transactions</th>
                 </tr>
-                <For each={entity()}>
-                {(item:EntityFE, index) => (
-                    <tr onclick={() => {showEntityOverlay(item.m_id + index())}}>
+            </thead>
+            <tbody>
+                <For each={entities()}>
+                {(item:EntityFE, _) => (
+                    <tr onclick={() => {showEntityOverlay(item.m_id)}}>
                         <td>{item.m_name}</td>
                         <td>{(item.m_description.length > 47) ? item.m_description.slice(0, 47).trimEnd() + "..." : item.m_description}</td>
-                        <td><span onclick={(e) => {e.stopPropagation(); showTransactionOverlay(item.m_last_transaction_id + index())}} class="interactive">{item.m_last_transaction}</span></td>
+                        <td><span onclick={(e) => {e.stopPropagation(); showTransactionOverlay(item.m_last_transaction_id)}} class="interactive">{item.m_last_transaction}</span></td>
                         <td>{item.m_delta_value}</td>
                         <td>{item.m_transactions}</td>
                     </tr>
@@ -55,11 +65,11 @@ function Ideas() {
                 </For>
             </tbody>
         </table>
-        <button onclick={showNewEntityOverlay}>
+        <button class="abs-br" onclick={showNewEntityOverlay}>
             <img src="/icons/plus-solid.svg" draggable="false"/>
         </button>
     </>
     )
 }
 
-export default Ideas;
+export default Entities;

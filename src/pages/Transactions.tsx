@@ -26,13 +26,15 @@ function Transactions() {
     return (
     <>
         <table id="transactions" class="dashboard-item interactive">
-            <tbody>
+            <thead>
                 <tr class="table-header-row">
                     <th>Idea</th>
                     <th>Transaction</th>
                     <th>Entity</th>
                     <th>Datetime</th>
                 </tr>
+            </thead>
+            <tbody>
                 <For each={transactions()}>
                 {(item:TransactionFE, index) => (
                     <tr onclick={() => {showTransactionOverlay(item.m_transaction_id + index())}}>

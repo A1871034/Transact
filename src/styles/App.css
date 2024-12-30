@@ -48,6 +48,7 @@ input {
 /* filters for svgs from https://codepen.io/sosuke/pen/Pjoqqp */
 
 [theme-mode="light"] {
+  --accent-color: #7fb0e1;
   --background-color: #d9d9d9;
   --tertiary-color: #e2e2e2; 
   --secondary-color: #ebebeb;
@@ -59,6 +60,7 @@ input {
 }
 
 [theme-mode="dark"] {
+  --accent-color: #348ce5;
   --background-color: #222222;
   --tertiary-color: #272727;
   --secondary-color: #2d2d2d;
@@ -75,7 +77,6 @@ input {
   overflow: scroll;
   
   /* My Vars */
-  --accent-color: #348ce5;
   /* --accent-hightlight-filter: invert(64%) sepia(64%) saturate(4659%) hue-rotate(188deg) brightness(91%) contrast(97%); */
   color: var(--text-color-2);
   background-color: var(--background-color);
@@ -177,7 +178,9 @@ img.icon.interactive:hover {
 .content {
   text-align: center;
   width: 100%;
-  height: 100%;
+  max-height: 100%;
+  padding: 1em;
+  overflow: scroll;
 }
 
 .page_content {
@@ -186,7 +189,6 @@ img.icon.interactive:hover {
 
 .dashboard-item {
   border-radius: .5em;
-  margin: 1em;
 }
 
 .pannel {
@@ -246,6 +248,12 @@ button img {
 
 */
 
+.abs-br {
+  position: absolute;
+  bottom: 1em;
+  right: 1em;
+}
+
 /* Table styling */
 
 table {
@@ -254,19 +262,19 @@ table {
   width: -webkit-fill-available;
 }
 
-tr:first-child th:first-child, tr:first-child td:first-child {
+thead tr:first-child th:first-child, thead tr:first-child td:first-child {
   border-radius: var(--table-border-radius) 0 0 0;
 }
 
-tr:first-child th:last-child, tr:first-child td:last-child {
+thead tr:first-child th:last-child, thead tr:first-child td:last-child {
   border-radius: 0 var(--table-border-radius) 0 0;
 }
 
-tr:last-child th:first-child, tr:last-child td:first-child {
+tbody tr:last-child th:first-child, tbody tr:last-child td:first-child {
   border-radius: 0 0 0 var(--table-border-radius);
 }
 
-tr:last-child th:last-child, tr:last-child td:last-child {
+tbody tr:last-child th:last-child, tbody tr:last-child td:last-child {
   border-radius: 0 0 var(--table-border-radius) 0;
 }
 
@@ -290,7 +298,22 @@ td, th {
   padding: .2em;
 }
 
-table.interactive tr:not(:first-child):hover {
+table.interactive tr:not(:first-child):hover, 
+  table.interactive tbody tr:hover {
   cursor: pointer;
   background-color: var(--primary-color);
+}
+
+div.tableWrap {
+  max-height: 100%;
+  overflow-y: scroll;
+}
+
+div.tableWrap > table > thead {
+  position: sticky;
+  top: 0;
+}
+
+form {
+  text-align: center;
 }

@@ -5,7 +5,7 @@ import { createSignal } from 'solid-js';
 const [overlayContent, setOverlayContent] = createSignal(<></>)
 const [label, setLabel] = createSignal("");
 
-function closeOverlay() {
+export function closeOverlay() {
     console.debug("closing overlay");
     document.getElementById("overlay")?.setAttribute("hidden", "");
     document.removeEventListener("keyup", overlayEscapeClose)

@@ -1,3 +1,7 @@
+use crate::DbConnection;
+use rusqlite::Result;
+use tauri::State;
+
 // Transaction list endpoint
 #[derive(serde::Serialize)]
 pub struct TransactionFE {
@@ -108,6 +112,7 @@ pub fn get_ideas() -> Vec<IdeaFE> {
 
 // Entities list endpoint
 #[derive(serde::Serialize)]
+#[derive(Debug)]
 pub struct EntityFE {
     m_id: u64,
     m_name: String,
@@ -117,40 +122,101 @@ pub struct EntityFE {
     m_transactions: u64,
     m_delta_value: i64,
 }
-fn build_entity_fe(m_name: &str, 
-    m_description: &str,
-    m_last_transaction: &str,
-    m_delta_value: i64) -> EntityFE {
-    EntityFE {
-        m_id: 0,
-        m_name: m_name.to_string(),
-        m_description: m_description.to_string(),
-        m_last_transaction: m_last_transaction.to_string(),
-        m_last_transaction_id: 0,
-        m_transactions: 3,
-        m_delta_value,
-    }
+
+fn db_get_entities(dbconn: State<DbConnection>) -> Result<Vec<EntityFE>, Box<dyn std::error::Error>> {
+    let locked = dbconn.conn.lock().unwrap();
+    let mut stmt = locked.prepare_cached(
+        "SELECT id, name, description FROM entities")?;
+    let raw_entities = stmt.query_map([], |row| {
+        Ok(EntityFE {
+            m_id: row.get(0)?,
+            m_name: row.get(1)?,
+            m_description: row.get(2)?,
+            m_last_transaction: String::from("last_tx"),
+            m_last_transaction_id: 0,
+            m_transactions: 0,
+            m_delta_value: 0,
+        })
+    })?;
+    let entities: Vec<EntityFE> = raw_entities.map(|result_entity| {
+        result_entity.unwrap()
+    }).collect();
+    Ok(entities)
 }
+
+// Entities list endpoint
+#[derive(serde::Serialize)]
+#[derive(Debug)]
+pub struct BareEntityFE {
+    m_id: u64,
+    m_name: String,
+}
+
+fn db_get_bare_entities(dbconn: State<DbConnection>) -> Result<Vec<BareEntityFE>, Box<dyn std::error::Error>> {
+    let locked = dbconn.conn.lock().unwrap();
+    let mut stmt = locked.prepare_cached(
+        "SELECT id, name FROM entities")?;
+    let raw_entities = stmt.query_map([], |row| {
+        Ok(BareEntityFE {
+            m_id: row.get(0)?,
+            m_name: row.get(1)?,
+        })
+    })?;
+    let entities: Vec<BareEntityFE> = raw_entities.map(|result_entity| {
+        result_entity.unwrap()
+    }).collect();
+    Ok(entities)
+}
+    
 #[tauri::command]
-pub fn get_entities() -> Vec<EntityFE> {
-    return vec![
-        build_entity_fe(
-            "Work",
-            "Not mcdonalds",
-            "5:04PM 28/07/24",
-            501,
-        ),
-        build_entity_fe(
-            "Ticket Slave",
-            "The online platform for purchasing tickets for local concerts, gigs, etc.",
-            "3:01PM 23/06/24",
-            -88,
-        ),
-        build_entity_fe(
-            "Apple",
-            "A store selling exclusively apples, not to be confused with the Apple tm store",
-            "2:00PM 22/06/24",
-            -2,
-        ),
-    ]
+pub fn get_bare_entities(dbconn: State<DbConnection>) -> Result<Vec<BareEntityFE>, String> {
+    println!("Recieved: get_entities");
+    let res = db_get_bare_entities(dbconn);
+    res.map_err(|err| {
+        err.to_string()
+    })
+}
+
+#[tauri::command]
+pub fn get_entities(dbconn: State<DbConnection>) -> Result<Vec<EntityFE>, String> {
+    println!("Recieved: get_entities");
+    let res = db_get_entities(dbconn);
+    res.map_err(|err| {
+        err.to_string()
+    })
+}
+
+#[derive(serde::Serialize)]
+#[derive(Debug)]
+pub struct AccountFE {
+    m_id: u64,
+    m_name: String,
+    m_entity_id: u64,
+    m_entity_name: String,
+}
+
+fn db_get_accounts(dbconn: State<DbConnection>) -> Result<Vec<AccountFE>, Box<dyn std::error::Error>> {
+    let lock = dbconn.conn.lock().unwrap();
+    let mut stmt = lock.prepare_cached(
+        "SELECT ea.id, ea.name, ea.entity_id, e.name FROM entity_accounts ea INNER JOIN entities e ON e.id = ea.entity_id;"
+    )?;
+    let raw_accounts = stmt.query_map([], |row| {
+        Ok(AccountFE {
+            m_id: row.get(0)?,
+            m_name: row.get(1)?,
+            m_entity_id: row.get(2)?,
+            m_entity_name: row.get(3)?,
+        })
+    })?;
+    let accounts: Vec<AccountFE> = raw_accounts.map(|result_account| {
+        result_account.unwrap()
+    }).collect();
+    Ok(accounts)
+}
+
+#[tauri::command]
+pub fn get_accounts(dbconn: State<DbConnection>) -> Result<Vec<AccountFE>, String> {
+    println!("Recieved: get_accounts");
+    db_get_accounts(dbconn)
+    .map_err(|err| err.to_string())
 }

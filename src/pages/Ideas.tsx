@@ -34,7 +34,7 @@ function Ideas() {
                 <col span="1" style="width: 17%;" />
                 <col span="1" style="width: 17%;" />
             </colgroup>
-            <tbody>
+            <thead>
                 <tr class="table-header-row">
                     <th>Idea</th>
                     <th>Description</th>
@@ -43,6 +43,8 @@ function Ideas() {
                     <th>Last Transaction</th>
                     <th>Created</th>
                 </tr>
+            </thead>
+            <tbody>
                 <For each={ideas()}>
                 {(item:IdeaFE, index) => (
                     <tr onclick={() => {showIdeaOverlay(item.m_id + index())}}>

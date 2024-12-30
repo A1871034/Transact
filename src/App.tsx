@@ -6,6 +6,7 @@ import { Component } from "solid-js";
 
 import { Overlay } from "./components/Overlay";
 import Home from './pages/Home';
+import Accounts from "./pages/Accounts";
 import Transactions from './pages/Transactions'
 import Ideas from './pages/Ideas';
 import Entities from './pages/Entities';
@@ -86,7 +87,7 @@ function App() {
       "path": "/accounts",
       "icon": "/icons/credit-card-solid.svg",
       "name": "Accounts",
-      "component": undefined,
+      "component": Accounts,
     },
     "/entites": {
       "path": "/entites",
