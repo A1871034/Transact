@@ -38,6 +38,7 @@ export function showNewAccountOverlay() {
                     m_name: name(),
                     m_entity_id: newAccEntityId(),
                     m_entity_name: chosenEntityName(),
+                    m_added: Math.floor(Date.now()/1000),
                 }
                 setAccounts(accounts().concat(new_entity as never));
                 closeOverlay();

@@ -39,7 +39,7 @@ fn db_submit_new_account(name: &str, entity_id: u64, dbconn: State<DbConnection>
 
 #[tauri::command]
 pub fn submit_new_entity(name: &str, description: &str, dbconn: State<DbConnection> ) -> Result<u64, String> {
-    println!("Received New Entity: name={}, description={}", name, description);
+    println!("Submit: new_entity name={}, description={}", name, description);
     db_submit_new_entity(&name, &description, dbconn)
         .map_err(|err| {
             err.to_string()
@@ -47,8 +47,20 @@ pub fn submit_new_entity(name: &str, description: &str, dbconn: State<DbConnecti
 }
 
 #[tauri::command]
+pub fn submit_delete_account(id: u64, dbconn: State<DbConnection>) -> Result<u64, String> {
+    println!("Submit: delete_account id={}", id);
+    dbconn.conn.lock().unwrap().execute(
+        "DELETE FROM entity_accounts WHERE id = ?1",
+        [id])
+        .map_err(|err| {
+            err.to_string()
+        })
+        .map(|_| id)
+}
+
+#[tauri::command]
 pub fn submit_delete_entity(id: u64, dbconn: State<DbConnection>) -> Result<u64, String> {
-    println!("Received delete_entity: id={}", id);
+    println!("Submit: delete_entity id={}", id);
     dbconn.conn.lock().unwrap().execute(
         "DELETE FROM entities WHERE id = ?1",
         [id])
@@ -60,7 +72,7 @@ pub fn submit_delete_entity(id: u64, dbconn: State<DbConnection>) -> Result<u64,
 
 #[tauri::command]
 pub fn submit_new_account(name: &str, entity_id: u64, dbconn: State<DbConnection> ) -> Result<u64, String> {
-    println!("Received New Entity: name={}, entity_id={}", name, entity_id);
+    println!("Submit: new_account name={}, entity_id={}", name, entity_id);
     db_submit_new_account(&name, entity_id, dbconn)
         .map_err(|err| {
             err.to_string()

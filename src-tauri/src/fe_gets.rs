@@ -170,7 +170,7 @@ fn db_get_bare_entities(dbconn: State<DbConnection>) -> Result<Vec<BareEntityFE>
     
 #[tauri::command]
 pub fn get_bare_entities(dbconn: State<DbConnection>) -> Result<Vec<BareEntityFE>, String> {
-    println!("Recieved: get_entities");
+    println!("Get: bare_entities");
     let res = db_get_bare_entities(dbconn);
     res.map_err(|err| {
         err.to_string()
@@ -179,7 +179,7 @@ pub fn get_bare_entities(dbconn: State<DbConnection>) -> Result<Vec<BareEntityFE
 
 #[tauri::command]
 pub fn get_entities(dbconn: State<DbConnection>) -> Result<Vec<EntityFE>, String> {
-    println!("Recieved: get_entities");
+    println!("Get: entities");
     let res = db_get_entities(dbconn);
     res.map_err(|err| {
         err.to_string()
@@ -193,12 +193,13 @@ pub struct AccountFE {
     m_name: String,
     m_entity_id: u64,
     m_entity_name: String,
+    m_added: u64,
 }
 
 fn db_get_accounts(dbconn: State<DbConnection>) -> Result<Vec<AccountFE>, Box<dyn std::error::Error>> {
     let lock = dbconn.conn.lock().unwrap();
     let mut stmt = lock.prepare_cached(
-        "SELECT ea.id, ea.name, ea.entity_id, e.name FROM entity_accounts ea INNER JOIN entities e ON e.id = ea.entity_id;"
+        "SELECT ea.id, ea.name, ea.entity_id, e.name, ea.added FROM entity_accounts ea INNER JOIN entities e ON e.id = ea.entity_id ORDER BY e.name ASC, ea.name ASC;"
     )?;
     let raw_accounts = stmt.query_map([], |row| {
         Ok(AccountFE {
@@ -206,6 +207,7 @@ fn db_get_accounts(dbconn: State<DbConnection>) -> Result<Vec<AccountFE>, Box<dy
             m_name: row.get(1)?,
             m_entity_id: row.get(2)?,
             m_entity_name: row.get(3)?,
+            m_added: row.get(4)?,
         })
     })?;
     let accounts: Vec<AccountFE> = raw_accounts.map(|result_account| {
@@ -216,7 +218,7 @@ fn db_get_accounts(dbconn: State<DbConnection>) -> Result<Vec<AccountFE>, Box<dy
 
 #[tauri::command]
 pub fn get_accounts(dbconn: State<DbConnection>) -> Result<Vec<AccountFE>, String> {
-    println!("Recieved: get_accounts");
+    println!("Get: accounts");
     db_get_accounts(dbconn)
     .map_err(|err| err.to_string())
 }

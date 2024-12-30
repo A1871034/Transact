@@ -21,14 +21,20 @@ div#overlay {
     animation-name: background-fade-in;
     animation-duration: .5s;
     animation-timing-function: ease-in-out;
+    overflow: scroll; /* form exceeds window */
+
+    justify-content: center;
+    align-items: center;
 }
 
 div#overlay-page {
+    /*
     position:fixed;
     width: 66%;
     height: 66%;
     top: calc(33%/2);
     left: calc(33%/2);
+    */
     background-color: var(--background-color);
     border-radius: 1em;
 
@@ -49,7 +55,8 @@ div#overlay-page.maximised {
 }
 
 div#overlay-content {
-    height: calc(100% - 40px);
+    height: calc(100% - 40px - 1em);
+    padding: 0.5em 1em;
 }
 
 div#overlay-content form {
@@ -64,7 +71,7 @@ div#overlay-content form {
 
 div#overlay-content form > * {
     flex-shrink:1;
-    margin: auto;
+    margin: 0.5em auto;
     width: fit-content;
 }
 

@@ -38,9 +38,9 @@ function Transactions() {
                 <For each={transactions()}>
                 {(item:TransactionFE, index) => (
                     <tr onclick={() => {showTransactionOverlay(item.m_transaction_id + index())}}>
-                        <td><span onclick={(e) => {e.stopPropagation(); showIdeaOverlay(item.m_idea_id + index())}} class="interactive">{item.m_idea_name}</span></td>
+                        <td><span onclick={(e) => {e.stopPropagation(); showIdeaOverlay(item.m_idea_id)}} class="interactive">{item.m_idea_name}</span></td>
                         <td>{item.m_transaction_summary}</td>
-                        <td><span onclick={(e) => {e.stopPropagation(); showEntityOverlay(item.m_entity_id + index())}} class="interactive">{item.m_entity_name}</span></td>
+                        <td><span onclick={(e) => {e.stopPropagation(); showEntityOverlay(item.m_entity_id, item.m_entity_name)}} class="interactive">{item.m_entity_name}</span></td>
                         <td>{item.m_datetime}</td>
                     </tr>
                 )}

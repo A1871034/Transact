@@ -54,7 +54,7 @@ function Entities() {
             <tbody>
                 <For each={entities()}>
                 {(item:EntityFE, _) => (
-                    <tr onclick={() => {showEntityOverlay(item.m_id)}}>
+                    <tr onclick={() => {showEntityOverlay(item.m_id, item.m_name)}}>
                         <td>{item.m_name}</td>
                         <td>{(item.m_description.length > 47) ? item.m_description.slice(0, 47).trimEnd() + "..." : item.m_description}</td>
                         <td><span onclick={(e) => {e.stopPropagation(); showTransactionOverlay(item.m_last_transaction_id)}} class="interactive">{item.m_last_transaction}</span></td>

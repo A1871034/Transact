@@ -24,6 +24,7 @@ fn setup_sqlite() -> Result<rusqlite::Connection> {
             id INTEGER NOT NULL,
             name TEXT NOT NULL,
             description TEXT,
+            added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
             PRIMARY KEY (id)
         );
         
@@ -31,6 +32,7 @@ fn setup_sqlite() -> Result<rusqlite::Connection> {
             id INTEGER NOT NULL,
             entity_id INTEGER NOT NULL,
             name TEXT NOT NULL,
+            added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
             PRIMARY KEY (id),
             FOREIGN KEY (entity_id) REFERENCES entities(id)
         );
@@ -40,17 +42,19 @@ fn setup_sqlite() -> Result<rusqlite::Connection> {
             name TEXT NOT NULL,
             description TEXT,
             time TIMESTAMP NOT NULL,
+            added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
             PRIMARY KEY (id)
         );
         
-        CREATE TABLE IF NOT EXISTS complex_transactions (
+        CREATE TABLE IF NOT EXISTS ideas (
             id INTEGER NOT NULL,
             name TEXT NOT NULL,
             description TEXT NOT NULL,
+            added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
             PRIMARY KEY (id)
         );
         
-        CREATE TABLE IF NOT EXISTS transaction_complex_link (
+        CREATE TABLE IF NOT EXISTS transaction_idea_link (
             transaction_id INTEGER NOT NULL,
             complex_id INTEGER NOT NULL,
             FOREIGN KEY (transaction_id) REFERENCES transactions(id)
@@ -82,6 +86,7 @@ fn main() {
             get_bare_entities,
             submit_new_entity,
             submit_new_account,
+            submit_delete_account,
             submit_delete_entity,
         ])
         .run(tauri::generate_context!())

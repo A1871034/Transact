@@ -7,8 +7,9 @@ const [label, setLabel] = createSignal("");
 
 export function closeOverlay() {
     console.debug("closing overlay");
-    document.getElementById("overlay")?.setAttribute("hidden", "");
-    document.removeEventListener("keyup", overlayEscapeClose)
+    document.getElementById("overlay")?.setAttribute("style", "display:none;");
+    document.getElementById("overlay")?.setAttribute("hidden", ""); // Currently uneccessary but seems good practise
+    document.removeEventListener("keyup", overlayEscapeClose) 
     setOverlayContent(<></>);
 }
 
@@ -25,7 +26,8 @@ function showOverlay(label: string, elements: any) {
     setLabel(label);
     document.removeEventListener("keyup", overlayEscapeClose)
     document.addEventListener("keyup", overlayEscapeClose);
-    document.getElementById("overlay")?.removeAttribute("hidden");
+    document.getElementById("overlay")?.setAttribute("style", "display:flex;");
+    document.getElementById("overlay")?.removeAttribute("hidden"); // Currently uneccessary but seems good practise
 }
 
 function Overlay() {

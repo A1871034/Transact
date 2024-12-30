@@ -19,15 +19,33 @@ async function deleteEntity(entity_id: number) {
         });
 }
 
-export function showEntityOverlay(entity_id: number) {
+export function showEntityOverlay(entity_id: number, entity_name: string) {
     const Entity = (
         <>
-            <h2>ID: {entity_id}</h2>
-            <button onclick={(_) => {deleteEntity(entity_id)}}>
-                <img src="/icons/bin-solid.svg" draggable="false"/>
-            </button>
+            <h2>{entity_name}</h2>
+            <div>
+                ID: <b>{entity_id}</b><br/>
+                Last tx: <b>2024/10/12 13:05:30</b><br/>
+                Transactions: <b>__</b><br/>
+                Delta: <b>$___</b><br/>
+            </div><br/>
+            <div>
+                Transactions list
+            </div><br/>
+            <div>
+                Accounts list
+            </div><br/>
+            <div>
+                Ideas list
+            </div><br/>
+            <div>
+                <label>delete entity</label><br/>
+                <button onclick={(_) => {deleteEntity(entity_id)}}>
+                    <img src="/icons/bin-solid.svg" draggable="false"/>
+                </button>
+            </div>
         </>
     )
 
-    showOverlay("Detailed Entity", Entity);
+    showOverlay("Entity", Entity);
 }
