@@ -4,8 +4,9 @@
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 
 const DATABASE_PATH: &str = "../test.db"; 
-use rusqlite::{Connection, Result}; // Transaction
-use std::sync::Mutex;
+const SQL_SETUP_PATH: &str = "./src/setup.sql";
+use rusqlite::{Connection, Result};
+use std::{fs::read_to_string, sync::Mutex};
 struct DbConnection {
     conn: Mutex<rusqlite::Connection>
 }
@@ -16,61 +17,11 @@ use fe_gets::*;
 mod fe_submits;
 use fe_submits::*;
 
-
 fn setup_sqlite() -> Result<rusqlite::Connection> {
     let conn = Connection::open(DATABASE_PATH)?;
-    conn.execute_batch(
-    "CREATE TABLE IF NOT EXISTS entities (
-            id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            description TEXT,
-            added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
-            PRIMARY KEY (id)
-        );
-        
-        CREATE TABLE IF NOT EXISTS entity_accounts (
-            id INTEGER NOT NULL,
-            entity_id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
-            PRIMARY KEY (id),
-            FOREIGN KEY (entity_id) REFERENCES entities(id)
-        );
-        
-        CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            description TEXT,
-            time TIMESTAMP NOT NULL,
-            added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
-            PRIMARY KEY (id)
-        );
-        
-        CREATE TABLE IF NOT EXISTS ideas (
-            id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            description TEXT NOT NULL,
-            added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
-            PRIMARY KEY (id)
-        );
-        
-        CREATE TABLE IF NOT EXISTS transaction_idea_link (
-            transaction_id INTEGER NOT NULL,
-            complex_id INTEGER NOT NULL,
-            FOREIGN KEY (transaction_id) REFERENCES transactions(id)
-            FOREIGN KEY (complex_id) REFERENCES complex_transactions(id)
-        );
-        
-        CREATE TABLE IF NOT EXISTS currency_transfer (
-            id INTEGER NOT NULL,
-            currency TEXT NOT NULL,
-            amount INTEGER NOT NULL,
-            from_account INTEGER NOT NULL,
-            to_account INTEGER NOT NULL,
-            PRIMARY KEY (id),
-            FOREIGN KEY (from_account) REFERENCES entity_accounts(id),
-            FOREIGN KEY (to_account) REFERENCES entity_accounts(id)
-        );")?;
+    let sql_setup_string = read_to_string(SQL_SETUP_PATH).expect("Failed to read SQL_SETUP_PATH");
+    let sql_setup_str = sql_setup_string.as_str();
+    conn.execute_batch(sql_setup_str)?;
     Ok(conn)
 }
 
