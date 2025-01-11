@@ -31,13 +31,16 @@ function DropdownSearch(
             <table class="interactive">
                 <thead>
                     <tr class="table-header-row">
-                        <th><input
+                        <th>
+                            <input
+                            id="ds-search"
                             type="text"
                             onkeyup={(e) => {setFilterBy(e.currentTarget.value)}}
                             placeholder="Search Entities..."
-                        /></th>
-                        <th style="text-align:left;">
-                            {displayStr()}
+                            /><br/>
+                            <div id="ds-display-selected" class="truncated" title={displayStr()}>
+                                {displayStr()}
+                            </div>
                         </th>
                     </tr>
                 </thead>
@@ -49,7 +52,7 @@ function DropdownSearch(
                             setDisplayStr(item[display_mname]);
                             (set_display === undefined) ? {} : set_display(item[display_mname]);
                         }}>
-                        <td colspan={2}>
+                        <td id="ds-item-name">
                             {item[display_mname]}
                         </td>
                         </tr>
