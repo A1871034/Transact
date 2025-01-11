@@ -1,6 +1,6 @@
 import '../styles/DropdownSearch.css'
 
-import { Accessor, createComputed, createSignal, For, JSX } from 'solid-js';
+import { Accessor, createComputed, createSignal, For, JSX, Show } from 'solid-js';
 
 function DropdownSearch(
     item_holder: Accessor<any[]>,
@@ -58,6 +58,13 @@ function DropdownSearch(
                         </tr>
                         )}
                     </For>
+                    <Show when={items().length == 0}>
+                        <tr id="ds-nothing-to-display">
+                            <td id="ds-item-name">
+                                Nothing to Display
+                            </td>
+                        </tr>
+                    </Show>
                 </tbody>
             </table>
         </div>

@@ -16,3 +16,8 @@ input#ds-search {
     min-width: 5em;
     max-width: 8em;
 }
+
+#ds-nothing-to-display {
+    background-color: var(--tertiary-color);
+    color: var(--text-color-1)
+}
