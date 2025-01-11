@@ -1,5 +1,5 @@
 import { createRoot, createSignal, For, getOwner, JSX } from "solid-js";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 
 import { showOverlay, closeOverlay } from "../components/Overlay";
 import { DropdownSearch } from "../components/DropdownSearch";

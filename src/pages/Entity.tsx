@@ -1,5 +1,5 @@
 import { closeOverlay, showOverlay } from "../components/Overlay";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { entities, EntityFE, setEntities } from "../pages/Entities"
 
 async function deleteEntity(entity_id: number) {

@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { createSignal, For } from "solid-js";
 
 import { showEntityOverlay } from "./Entity";

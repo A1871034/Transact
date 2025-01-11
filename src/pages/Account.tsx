@@ -1,5 +1,5 @@
 import { closeOverlay, showOverlay } from "../components/Overlay";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { accounts, AccountFE, setAccounts } from "./Accounts";
 
 async function deleteAccount(account_id: number) {
