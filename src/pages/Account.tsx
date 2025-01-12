@@ -1,6 +1,9 @@
-import { closeOverlay, showOverlay } from "../components/Overlay";
 import { invoke } from "@tauri-apps/api/core";
-import { accounts, AccountFE, setAccounts } from "./Accounts";
+
+import { closeOverlay, showOverlay } from "../components/Overlay";
+import { AccountFE } from "../FrontEndTypes";
+
+import { accounts, setAccounts } from "./Accounts";
 
 async function deleteAccount(account_id: number) {
     console.debug("Submitting account_id=", account_id, " for deletion");

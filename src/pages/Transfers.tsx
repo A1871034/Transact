@@ -1,20 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
 import { createSignal, For } from "solid-js";
 
+import { TransferFE } from "../FrontEndTypes";
+
 import { showTransactionOverlay } from "./Transaction";
 import { showEntityOverlay } from "./Entity";
 import { showNewTransferOverlay } from "./TransferNew";
 import { showTransferOverlay } from "./Transfer";
 
-export interface TransferFE {
-    m_idea_id: number,
-    m_idea_name: string,
-    m_transaction_summary: string,
-    m_transaction_id: number,
-    m_entity_name: string,
-    m_entity_id: number,
-    m_datetime: string,
-}
 export const [transfers, setTransfers] = createSignal([]);
 async function get_transfers() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command

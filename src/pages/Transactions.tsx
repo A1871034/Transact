@@ -1,20 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import { createSignal, For } from "solid-js";
 
+import { TransactionFE } from "../FrontEndTypes";
+
 import { showTransactionOverlay } from "./Transaction";
 import { showTransferOverlay } from "./Transfer";
 
-interface TransactionFE {
-    m_id: number,
-    m_name: string,
-    m_description: string,
-    m_closed: boolean,
-    m_count_transactions: number,
-    m_latest_transaction_datetime: string,
-    m_latest_transaction_id: number,
-    m_created: string,
-}
-const [transactions, setTransactions] = createSignal([]);
+export const [transactions, setTransactions] = createSignal([]);
 async function get_transactions() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
     setTransactions(await invoke("get_transactions"));

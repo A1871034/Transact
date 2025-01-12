@@ -1,9 +1,10 @@
-import { createSignal } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
+import { createSignal } from "solid-js";
 
 import { showOverlay, closeOverlay } from "../components/Overlay";
+import { TransferFE } from "../FrontEndTypes";
 
-import { transfers, setTransfers, TransferFE } from "./Transfers";
+import { transfers, setTransfers } from "./Transfers";
 
 export function showNewTransferOverlay() {
     const [name, setName] = createSignal("");

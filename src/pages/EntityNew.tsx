@@ -1,9 +1,10 @@
-import { createSignal } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
+import { createSignal } from "solid-js";
 
 import { showOverlay, closeOverlay } from "../components/Overlay";
+import { EntityFE } from "../FrontEndTypes";
 
-import { entities, setEntities, EntityFE } from "../pages/Entities";
+import { entities, setEntities } from "./Entities";
 
 export function showNewEntityOverlay() {
     const [name, setName] = createSignal("");

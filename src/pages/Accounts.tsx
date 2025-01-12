@@ -1,17 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import { createSignal, For } from "solid-js";
 
+import { AccountFE } from "../FrontEndTypes";
+
 import { showEntityOverlay } from "./Entity";
 import { showNewAccountOverlay } from "./AccountNew";
 import { showAccountOverlay } from "./Account";
 
-export interface AccountFE {
-    m_id: number,
-    m_name: string,
-    m_entity_id: number,
-    m_entity_name: string,
-    m_added: number,
-}
 export const [accounts, setAccounts] = createSignal([]);
 async function get_accounts() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command

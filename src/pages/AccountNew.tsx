@@ -1,10 +1,11 @@
-import { createRoot, createSignal, For, getOwner, JSX } from "solid-js";
+import { createRoot, createSignal, getOwner, JSX } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 
 import { showOverlay, closeOverlay } from "../components/Overlay";
 import { DropdownSearch } from "../components/DropdownSearch";
+import { AccountFE } from "../FrontEndTypes";
 
-import { accounts, setAccounts, AccountFE } from "../pages/Accounts";
+import { accounts, setAccounts } from "./Accounts";
 
 
 interface bareEntity {

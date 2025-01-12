@@ -1,6 +1,9 @@
-import { closeOverlay, showOverlay } from "../components/Overlay";
 import { invoke } from "@tauri-apps/api/core";
-import { entities, EntityFE, setEntities } from "../pages/Entities"
+
+import { closeOverlay, showOverlay } from "../components/Overlay";
+import { EntityFE } from "../FrontEndTypes";
+
+import { entities, setEntities } from "./Entities"
 
 async function deleteEntity(entity_id: number) {
     console.debug("Submitting entity_id=", entity_id, " for deletion");

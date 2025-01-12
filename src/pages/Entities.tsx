@@ -1,19 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import { createSignal, For } from "solid-js";
 
+import { EntityFE } from "../FrontEndTypes";
+
 import { showEntityOverlay } from "./Entity";
 import { showNewEntityOverlay } from "./EntityNew";
 import { showTransferOverlay } from "./Transfer";
 
-export interface EntityFE {
-    m_id: number,
-    m_name: string,
-    m_description: string,
-    m_last_transaction: string,
-    m_last_transaction_id: number,
-    m_transactions: number,
-    m_delta_value: number,
-}
 export const [entities, setEntities] = createSignal([]);
 async function get_entities() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
