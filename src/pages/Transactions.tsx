@@ -43,8 +43,20 @@ function Transactions() {
                         <td>{item.m_name}</td>
                         <td>{(item.m_description.length > 47) ? item.m_description.slice(0, 47).trimEnd() + "..." : item.m_description}</td>
                         <td>{item.m_closed ? "closed" : "open"}</td>
-                        <td>{item.m_count_transactions}</td>
-                        <td><span onclick={(e) => {e.stopPropagation(); showTransferOverlay(item.m_latest_transaction_id + index())}} class="interactive">{item.m_latest_transaction_datetime}</span></td>
+                        <td>{item.m_count_transfers}</td>
+                        <td>
+                            <span
+                                onclick={(e) => {
+                                    e.stopPropagation();
+                                    if (item.m_latest_transfer_id !== undefined) {
+                                        showTransferOverlay(item.m_latest_transfer_id + index())
+                                    }
+                                }}
+                                class={(item.m_latest_transfer_id !== undefined) ? "interactive" : ""}
+                            >
+                                {item.m_latest_transfer_datetime}
+                            </span>
+                        </td>
                         <td>{item.m_created}</td>
                     </tr>
                 )}

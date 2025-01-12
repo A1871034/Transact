@@ -32,8 +32,8 @@ function Transfers() {
                 <For each={transfers()}>
                 {(item:TransferFE, index) => (
                     <tr onclick={() => {showTransferOverlay(item.m_transaction_id + index())}}>
-                        <td><span onclick={(e) => {e.stopPropagation(); showTransactionOverlay(item.m_idea_id)}} class="interactive">{item.m_idea_name}</span></td>
-                        <td>{item.m_transaction_summary}</td>
+                        <td><span onclick={(e) => {e.stopPropagation(); showTransactionOverlay(item.m_transaction_id)}} class="interactive">{item.m_transaction_name}</span></td>
+                        <td>{item.m_transfer_summary}</td>
                         <td><span onclick={(e) => {e.stopPropagation(); showEntityOverlay(item.m_entity_id, item.m_entity_name)}} class="interactive">{item.m_entity_name}</span></td>
                         <td>{item.m_datetime}</td>
                     </tr>

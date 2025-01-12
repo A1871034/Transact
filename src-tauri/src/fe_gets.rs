@@ -5,10 +5,10 @@ use tauri::State;
 // Transaction list endpoint
 #[derive(serde::Serialize)]
 pub struct TransferFE {
-    m_idea_id: u64,
-    m_idea_name: String,
-    m_transaction_summary: String,
     m_transaction_id: u64,
+    m_transaction_name: String,
+    m_transfer_summary: String,
+    m_transfer_id: u64,
     m_entity_name: String,
     m_entity_id: u64,
     m_datetime: String,    
@@ -17,10 +17,10 @@ fn build_transfer_fe(m_idea_name: &str,
     m_transaction_summary: &str, m_entity_name: &str,
     m_datetime: &str) -> TransferFE {
     TransferFE {
-        m_idea_id: 0,
-        m_idea_name: m_idea_name.to_string(),
-        m_transaction_summary: m_transaction_summary.to_string(),
         m_transaction_id: 0,
+        m_transaction_name: m_idea_name.to_string(),
+        m_transfer_summary: m_transaction_summary.to_string(),
+        m_transfer_id: 0,
         m_entity_name: m_entity_name.to_string(),
         m_entity_id: 0,
         m_datetime: m_datetime.to_string(),
