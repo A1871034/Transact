@@ -1,11 +1,11 @@
 import { showOverlay } from "../components/Overlay";
 
 export function showTransactionOverlay(transaction_id: number) {
-    const Transaction = (
+    const Idea = (
         <>
             <h2>ID: {transaction_id}</h2>
         </>
     )
 
-    showOverlay("Transaction on __", Transaction);
+    showOverlay("Payslip", Idea);
 }

@@ -1,18 +1,18 @@
 import { invoke } from "@tauri-apps/api/core";
 import { createSignal, For } from "solid-js";
 
-import { showIdeaOverlay } from "./Idea";
-import { showEntityOverlay } from "./Entity";
 import { showTransactionOverlay } from "./Transaction";
+import { showTransferOverlay } from "./Transfer";
 
 interface TransactionFE {
-    m_idea_id: number,
-    m_idea_name: string,
-    m_transaction_summary: string,
-    m_transaction_id: number,
-    m_entity_name: string,
-    m_entity_id: number,
-    m_datetime: string,
+    m_id: number,
+    m_name: string,
+    m_description: string,
+    m_closed: boolean,
+    m_count_transactions: number,
+    m_latest_transaction_datetime: string,
+    m_latest_transaction_id: number,
+    m_created: string,
 }
 const [transactions, setTransactions] = createSignal([]);
 async function get_transactions() {
@@ -25,28 +25,43 @@ function Transactions() {
     get_transactions();
     return (
     <>
-        <table id="transactions" class="dashboard-item interactive">
+        <table class="dashboard-item interactive">
+            <colgroup>
+                <col span="1" style="width: 17%;" />
+                <col span="1" style="width: 33%;" />
+                <col span="1" style="width: 10%;" />
+                <col span="1" style="width: 10%;" />
+                <col span="1" style="width: 17%;" />
+                <col span="1" style="width: 17%;" />
+            </colgroup>
             <thead>
                 <tr class="table-header-row">
-                    <th>Idea</th>
                     <th>Transaction</th>
-                    <th>Entity</th>
-                    <th>Datetime</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Transfers</th>
+                    <th>Last Transfer</th>
+                    <th>Created</th>
                 </tr>
             </thead>
             <tbody>
                 <For each={transactions()}>
                 {(item:TransactionFE, index) => (
-                    <tr onclick={() => {showTransactionOverlay(item.m_transaction_id + index())}}>
-                        <td><span onclick={(e) => {e.stopPropagation(); showIdeaOverlay(item.m_idea_id)}} class="interactive">{item.m_idea_name}</span></td>
-                        <td>{item.m_transaction_summary}</td>
-                        <td><span onclick={(e) => {e.stopPropagation(); showEntityOverlay(item.m_entity_id, item.m_entity_name)}} class="interactive">{item.m_entity_name}</span></td>
-                        <td>{item.m_datetime}</td>
+                    <tr onclick={() => {showTransactionOverlay(item.m_id + index())}}>
+                        <td>{item.m_name}</td>
+                        <td>{(item.m_description.length > 47) ? item.m_description.slice(0, 47).trimEnd() + "..." : item.m_description}</td>
+                        <td>{item.m_closed ? "closed" : "open"}</td>
+                        <td>{item.m_count_transactions}</td>
+                        <td><span onclick={(e) => {e.stopPropagation(); showTransferOverlay(item.m_latest_transaction_id + index())}} class="interactive">{item.m_latest_transaction_datetime}</span></td>
+                        <td>{item.m_created}</td>
                     </tr>
                 )}
                 </For>
             </tbody>
         </table>
+        <h2>TODO:</h2>
+        <p>Table is sorted open -&gt; last_transaction -&gt; create</p>
+        <p>Create Transaction button -&gt; overlay</p>
     </>
     )
 }

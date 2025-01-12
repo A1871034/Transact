@@ -31,8 +31,8 @@ fn main() {
         .manage(DbConnection { conn: Mutex::new(conn) })
         .invoke_handler(tauri::generate_handler![
             get_accounts,
+            get_transfers,
             get_transactions,
-            get_ideas,
             get_entities,
             get_bare_entities,
             submit_new_entity,

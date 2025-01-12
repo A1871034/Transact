@@ -7,8 +7,8 @@ import { Component } from "solid-js";
 import { Overlay } from "./components/Overlay";
 import Home from './pages/Home';
 import Accounts from "./pages/Accounts";
-import Transactions from './pages/Transactions'
-import Ideas from './pages/Ideas';
+import Transfers from './pages/Transfers'
+import Transactions from './pages/Transactions';
 import Entities from './pages/Entities';
 import Settings from "./pages/Settings";
 
@@ -53,17 +53,17 @@ function App() {
       "name": "Home",
       "component": Home,
     },
+    "/transfers": {
+      "path": "/transfers",
+      "icon": "/icons/arrow-right-arrow-left-solid.svg",
+      "name": "Transfers",
+      "component": Transfers,
+    },
     "/transactions": {
       "path": "/transactions",
-      "icon": "/icons/arrow-right-arrow-left-solid.svg",
+      "icon": "/icons/list-ul-solid.svg",
       "name": "Transactions",
       "component": Transactions,
-    },
-    "/ideas": {
-      "path": "/ideas",
-      "icon": "/icons/list-ul-solid.svg",
-      "name": "Ideas",
-      "component": Ideas,
     },
     "/income": {
       "path": "/income",

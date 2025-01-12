@@ -3,7 +3,7 @@ import { createSignal, For } from "solid-js";
 
 import { showEntityOverlay } from "./Entity";
 import { showNewEntityOverlay } from "./EntityNew";
-import { showTransactionOverlay } from "./Transaction";
+import { showTransferOverlay } from "./Transfer";
 
 export interface EntityFE {
     m_id: number,
@@ -57,7 +57,7 @@ function Entities() {
                     <tr onclick={() => {showEntityOverlay(item.m_id, item.m_name)}}>
                         <td>{item.m_name}</td>
                         <td>{(item.m_description.length > 47) ? item.m_description.slice(0, 47).trimEnd() + "..." : item.m_description}</td>
-                        <td><span onclick={(e) => {e.stopPropagation(); showTransactionOverlay(item.m_last_transaction_id)}} class="interactive">{item.m_last_transaction}</span></td>
+                        <td><span onclick={(e) => {e.stopPropagation(); showTransferOverlay(item.m_last_transaction_id)}} class="interactive">{item.m_last_transaction}</span></td>
                         <td>{item.m_delta_value}</td>
                         <td>{item.m_transactions}</td>
                     </tr>
