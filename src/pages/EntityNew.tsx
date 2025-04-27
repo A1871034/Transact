@@ -53,6 +53,9 @@ export function showNewEntityOverlay() {
                         />
                 </div>
                 <button type="submit">Add Entity</button>
+                <div>
+                    <h3>TODO: Add multiselect default accounts</h3>
+                </div>
             </form>
         </>
     )

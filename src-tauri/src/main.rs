@@ -5,8 +5,8 @@
 
 const DATABASE_PATH: &str = "../test.db"; 
 const SQL_SETUP_PATH: &str = "./src/setup.sql";
-use rusqlite::{Connection, Result};
-use std::{fs::read_to_string, sync::Mutex};
+use rusqlite::{Connection, Result, Error};
+use std::{fs::read_to_string, panic, sync::Mutex};
 struct DbConnection {
     conn: Mutex<rusqlite::Connection>
 }
@@ -26,17 +26,23 @@ fn setup_sqlite() -> Result<rusqlite::Connection> {
 }
 
 fn main() {
-    let conn = setup_sqlite().unwrap();
+    let conn = setup_sqlite().unwrap_or_else(|err: Error| {
+        panic!("---- FATAL ----\nSQLITE Setup Error\n {}", err.to_string());
+    });
     tauri::Builder::default()
         .manage(DbConnection { conn: Mutex::new(conn) })
         .invoke_handler(tauri::generate_handler![
             get_accounts,
+            get_bare_accounts,
             get_transfers,
+            get_transaction,
             get_transactions,
             get_entities,
             get_bare_entities,
             submit_new_entity,
             submit_new_account,
+            submit_new_transaction,
+            submit_new_currency_transfer,
             submit_delete_account,
             submit_delete_entity,
         ])

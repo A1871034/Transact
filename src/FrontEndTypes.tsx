@@ -6,6 +6,22 @@ interface AccountFE {
     m_added: number,
 }
 
+interface BareAccountFE {
+    m_account_id: number,
+    m_account_name: string,
+    m_owning_entity_name: string,
+}
+
+interface BareEntityFE {
+    m_id: number,
+    m_name: string,
+}
+
+interface DetailedTransactionFE {
+    m_transaction: TransactionFE,
+    m_transfers: [TransferFE],
+}
+
 interface EntityFE {
     m_id: number,
     m_name: string,
@@ -16,30 +32,41 @@ interface EntityFE {
     m_delta_value: number,
 }
 
+export enum TransferType {
+    Currency = "Currency",
+    Item = "Item",
+    Asset = "Asset",
+    Debt = "Debt",
+}
+
 interface TransactionFE {
     m_id: number,
     m_name: string,
     m_description: string,
     m_closed: boolean,
     m_count_transfers: number,
-    m_latest_transfer_datetime: number | undefined,
-    m_latest_transfer_id: number | undefined,
-    m_created: number,
+    m_latest_currency_transfer_datetime: number | null,
+    m_latest_currency_transfer_id: number | null,
+    m_created: number,   
 }
 
 interface TransferFE {
-    m_transaction_id: number,
-    m_transaction_name: string,
-    m_transfer_summary: string,
     m_transfer_id: number,
-    m_entity_name: string,
-    m_entity_id: number,
-    m_datetime: string,
+    m_type: TransferType,
+    m_value: number,
+    m_to_id: number,
+    m_to_name: string,
+    m_from_id: number,
+    m_from_name: string,
+    m_time: number,
 }
 
 export type { 
     AccountFE,
+    BareAccountFE,
+    BareEntityFE,
+    DetailedTransactionFE,
     EntityFE, 
     TransactionFE, 
-    TransferFE 
+    TransferFE,
 };

@@ -6,6 +6,7 @@ import { AccountFE } from "../FrontEndTypes";
 import { showEntityOverlay } from "./Entity";
 import { showNewAccountOverlay } from "./AccountNew";
 import { showAccountOverlay } from "./Account";
+import { database_time_to_string } from "../Utils";
 
 export const [accounts, setAccounts] = createSignal([]);
 async function get_accounts() {
@@ -46,7 +47,7 @@ function Accounts() {
                         <tr onclick={() => {showAccountOverlay(item.m_id, item.m_name)}}>
                             <td>{item.m_name}</td>
                             <td><span onclick={(e) => {e.stopPropagation(); showEntityOverlay(item.m_entity_id, item.m_entity_name)}} class="interactive">{item.m_entity_name}</span></td>
-                            <td>{new Date(item.m_added * 1000).toLocaleString("sv-SE")}</td>
+                            <td>{database_time_to_string(item.m_added)}</td>
                         </tr>
                     )}
                     </For>

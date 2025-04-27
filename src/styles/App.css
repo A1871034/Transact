@@ -9,6 +9,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  --drop-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
 .row {
@@ -20,21 +22,26 @@ h1 {
   text-align: center;
 }
 
-input {
+input, textarea, select {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
+  color: var(--text-color-2);
+  background-color: var(--primary-color);
   transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--drop-shadow);
+  outline: none;
 }
 
-input {
-  outline: none;
+input:focus {
+  border: 1px solid var(--text-color-2);
+}
+
+input[type=checkbox] {
+  zoom: 2;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -49,6 +56,7 @@ input {
 
 [theme-mode="light"] {
   --accent-color: #7fb0e1;
+  --red-color: #C05B5B;
   --background-color: #d9d9d9;
   --tertiary-color: #e2e2e2; 
   --secondary-color: #ebebeb;
@@ -61,6 +69,7 @@ input {
 
 [theme-mode="dark"] {
   --accent-color: #348ce5;
+  --red-color: #B82828;
   --background-color: #222222;
   --tertiary-color: #272727;
   --secondary-color: #2d2d2d;
@@ -80,7 +89,7 @@ input {
   /* --accent-hightlight-filter: invert(64%) sepia(64%) saturate(4659%) hue-rotate(188deg) brightness(91%) contrast(97%); */
   color: var(--text-color-2);
   background-color: var(--background-color);
-}
+}:focus
 
 #root {
   height: 100vh;
@@ -216,7 +225,7 @@ button {
   border: 1px solid transparent;
   cursor: pointer;
   outline: none;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--drop-shadow);
   color: var(--text-color-2);
   padding: .5em .5em;
 }
@@ -225,6 +234,10 @@ button:hover {
   transition: 0.25s;
   border: 1px solid var(--text-color-2);
 }
+
+button:focus {
+  border: 1px solid var(--text-color-2);
+} 
 
 button:active {
   background-color: var(--primary-color);
@@ -238,7 +251,6 @@ button img {
 }
 
 /* Dashboard tiling */
-/*
 .tile-container {
   display: flex;
   flex-direction: row;
@@ -250,9 +262,75 @@ button img {
 
 .tile {
   flex-basis: content;
+  flex-grow: 1;
+  margin: .5em;
+  background-color: var(--tertiary-color);
+  border-radius: .5em;
+  position: relative;
 }
 
-*/
+div .tile-header {
+  border-radius: .5em .5em 0 0;
+  background-color: var(--accent-color);
+  text-align: center;
+}
+
+.tile-header h2 {
+  margin: 0;
+  padding: .5em 2em .25em 2em;
+}
+
+.tile-contents {
+  padding: 1em;
+  height: calc(100% - 4.625em);
+  width: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.tile-contents p {
+  margin: .25em;
+}
+
+.tile-contents p:first-child {
+  margin-top: 0;
+}
+.tile-contents p:last-child {
+  margin-bottom: 0;
+}
+
+div.tile-button-br button {
+  border-radius: 0.5em 0;
+}
+
+div.tile-button-bl button {
+  border-radius: 0 0.5em;
+}
+
+div.tile-button div {
+  transition: rotate .2s ease-in-out; 
+  will-change: transform;
+}
+
+div.tile-button {
+  background-color: var(--background-color);
+  position: absolute;
+  width: calc(2.5em + 1px);
+  height: calc(2.5em + 1px);
+  padding: .25em;
+}
+
+div.tile-button.tile-button-br {
+  bottom: -.25em;
+  right: -.25em;
+  border-radius: .5em 0;
+}
+
+div.tile-button.tile-button-bl {
+  bottom: -.25em;
+  left: -.25em;
+  border-radius: 0 .5em;
+}
 
 .abs-br {
   position: absolute;
@@ -296,15 +374,11 @@ tr.table-header-row {
   background-color: var(--accent-color);
 }
 
-tr.table-header-row > th {
-  padding: .3em;
+tr.table-header-row > th, td, th {
+  padding: .2em .5em 0 .5em;
 }
 
-td, th {
-  padding: .2em;
-}
-
-table.interactive tr:not(:first-child):hover, 
+table.interactive tbody tr:not(:first-child):hover, 
   table.interactive tbody tr:hover {
   cursor: pointer;
   background-color: var(--primary-color);
@@ -322,4 +396,48 @@ div.tableWrap > table > thead {
 
 form {
   text-align: center;
+}
+
+#transfer-type-select {
+  margin: -1em 0 0 -1em;
+  width: fit-content;
+  border-radius: 0 0 0 0.5em;
+  height: calc(100% + 1em);
+}
+
+#new-tx-content {
+  flex-direction: row;
+}
+
+#new-tx-content > div {
+  width: 100%;
+  padding: 1em;
+}
+
+div#transaction-transfers {
+  max-height: calc(min(20em, 55vh));
+  overflow-y: scroll;
+  border-radius: var(--table-border-radius);
+}
+
+/* General Styles */
+.flex-row {
+  flex-direction: row !important;
+}
+
+.ta-c {
+  text-align: center;
+}
+
+.bg-p {
+  background-color: var(--primary-color) !important;
+}
+
+.sticky-top {
+  position: sticky;
+  top: 0;
+}
+
+.hide-overflow {
+  overflow: hidden;
 }

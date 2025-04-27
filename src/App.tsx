@@ -25,6 +25,9 @@ const [showNavLabels, setShowNavLabels] = createSignal(true);
 export function toggleNavLabels() {
   setShowNavLabels(!showNavLabels());
 }
+export function getShowNavLabels() {
+  return showNavLabels();
+}
 
 /* Main app */
 function App() {
@@ -53,17 +56,17 @@ function App() {
       "name": "Home",
       "component": Home,
     },
-    "/transfers": {
-      "path": "/transfers",
-      "icon": "/icons/arrow-right-arrow-left-solid.svg",
-      "name": "Transfers",
-      "component": Transfers,
-    },
     "/transactions": {
       "path": "/transactions",
       "icon": "/icons/list-ul-solid.svg",
       "name": "Transactions",
       "component": Transactions,
+    },
+    "/transfers": {
+      "path": "/transfers",
+      "icon": "/icons/arrow-right-arrow-left-solid.svg",
+      "name": "Transfers",
+      "component": Transfers,
     },
     "/income": {
       "path": "/income",
@@ -147,7 +150,10 @@ function App() {
         <nav>
           <For each={Object.values(navItems)}>
           {(item, _) => (
-            <A class={item.class !== undefined ? item.class : ""} href={item.path} draggable="false"><img src={item.icon} class="icon" draggable="false"/>{showNavLabels() ? (<span>{item.name}</span>) : ""}</A>
+            <A class={item.class !== undefined ? item.class : ""} href={item.path} draggable="false">
+                <img src={item.icon} class="icon" draggable="false" title={!showNavLabels() ? item.name : undefined}/>
+                {showNavLabels() ? (<span>{item.name}</span>) : ""}
+            </A>
           )}
           </For>
         </nav>

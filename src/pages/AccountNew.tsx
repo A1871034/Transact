@@ -2,6 +2,7 @@ import { createRoot, createSignal, getOwner, JSX } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 
 import { showOverlay, closeOverlay } from "../components/Overlay";
+import { get_time_as_if_database } from "../Utils";
 import { DropdownSearch } from "../components/DropdownSearch";
 import { AccountFE } from "../FrontEndTypes";
 
@@ -39,7 +40,7 @@ export function showNewAccountOverlay() {
                     m_name: name(),
                     m_entity_id: newAccEntityId(),
                     m_entity_name: chosenEntityName(),
-                    m_added: Math.floor(Date.now()/1000),
+                    m_added: get_time_as_if_database(),
                 }
                 setAccounts(accounts().concat(new_entity as never));
                 closeOverlay();

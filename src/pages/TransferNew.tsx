@@ -53,6 +53,7 @@ export function showNewTransferOverlay() {
                         />
                 </div>
                 <button type="submit">Add Entity</button>
+                <h1>Depreceated: Should turn this into quick transfer, i.e. transaction with single transfer</h1>
             </form>
         </>
     )

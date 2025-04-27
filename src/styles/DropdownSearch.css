@@ -1,23 +1,38 @@
-div.dropdown {
-    height: 15em;
+div.dropdown-search {
+    position: relative;
+    padding: .25em;
+    border-radius: 0.5em;
+    background-color: var(--accent-color);
+    width: fit-content;
+    margin: auto;
 }
 
 div#ds-display-selected {
     min-width: 5em;
-    max-width: 8em;
+    max-width: 11em;
     margin: 0.3em auto 0 auto;
-}
-
-td#ds-item-name {
-    max-width: 5em;
 }
 
 input#ds-search {
     min-width: 5em;
-    max-width: 8em;
+    max-width: 11em;
 }
 
 #ds-nothing-to-display {
     background-color: var(--tertiary-color);
     color: var(--text-color-1)
+}
+
+div.dropdown {
+    position: absolute;
+    top: -3em;
+    left: calc(100% + 0.5em);
+    width: max-content;
+    max-width: 20em;
+    max-height: 10em;
+    overflow: scroll;
+    border: 1px solid var(--accent-color);
+    border-radius: 0.5em;
+    box-shadow: 0 0 0.75em rgba(0, 0, 0, 0.3);
+    z-index: 2;
 }

@@ -2,58 +2,29 @@ use crate::DbConnection;
 use rusqlite::Result;
 use tauri::State;
 
+#[derive(serde::Serialize)]
+enum TransferType {
+    Currency,
+    // Item,
+    // Asset,
+    // Debt,
+}
 // Transaction list endpoint
 #[derive(serde::Serialize)]
 pub struct TransferFE {
-    m_transaction_id: u64,
-    m_transaction_name: String,
-    m_transfer_summary: String,
     m_transfer_id: u64,
-    m_entity_name: String,
-    m_entity_id: u64,
-    m_datetime: String,    
+    m_type: TransferType,
+    m_value: f64,
+    m_to_id: u64,
+    m_to_name: String,
+    m_from_id: u64,
+    m_from_name: String,
+    m_time: u64,
 }
-fn build_transfer_fe(m_idea_name: &str, 
-    m_transaction_summary: &str, m_entity_name: &str,
-    m_datetime: &str) -> TransferFE {
-    TransferFE {
-        m_transaction_id: 0,
-        m_transaction_name: m_idea_name.to_string(),
-        m_transfer_summary: m_transaction_summary.to_string(),
-        m_transfer_id: 0,
-        m_entity_name: m_entity_name.to_string(),
-        m_entity_id: 0,
-        m_datetime: m_datetime.to_string(),
-    }
-}
+
 #[tauri::command]
 pub fn get_transfers() -> Vec<TransferFE> {
-    return vec![
-        build_transfer_fe(
-            "Payslip",
-            "+ $501",
-            "Work",
-            "5:04PM 28/07/24"
-        ),
-        build_transfer_fe(
-            "Concert",
-            "- $88",
-            "Ticket Slave",
-            "3:01PM 23/06/24",
-        ),
-        build_transfer_fe(
-            "kachow",
-            "+ pineapple",
-            "Apple",
-            "2:00PM 22/06/24",
-        ),
-        build_transfer_fe(
-            "kachow",
-            "- melon",
-            "Apple",
-            "2:00PM 22/06/24",
-        ),
-    ]
+    vec![]
 }
 
 // Ideas list endpoint
@@ -64,50 +35,96 @@ pub struct TransactionFE {
     m_description: String,
     m_closed: bool,
     m_count_transfers: u64,
-    m_latest_transfer_datetime: String,
-    m_latest_transfer_id: u64,
-    m_created: String,   
+    m_latest_currency_transfer_datetime: Option<u64>,
+    m_latest_currency_transfer_id: Option<u64>,
+    m_created: u64,   
 }
-fn build_transaction_fe(m_name: &str, 
-    m_description: &str, m_closed: bool,
-    m_latest_transaction_datetime: &str,
-    m_created: &str) -> TransactionFE {
-    TransactionFE {
-        m_id: 0,
-        m_name: m_name.to_string(),
-        m_description: m_description.to_string(),
-        m_closed,
-        m_count_transfers: 2,
-        m_latest_transfer_datetime: m_latest_transaction_datetime.to_string(),
-        m_latest_transfer_id: 0,
-        m_created: m_created.to_string(), 
-    }
+
+#[derive(serde::Serialize)]
+pub struct DetailedTransactionFE {
+    m_transaction: TransactionFE,
+    m_transfers: Vec<TransferFE>,
 }
+
+fn db_get_transactions(dbconn: State<DbConnection>) -> Result<Vec<TransactionFE>, Box<dyn std::error::Error>> {
+    let locked = dbconn.conn.lock().unwrap();
+    let mut stmt = locked.prepare_cached(
+        "SELECT id, name, description, closed, added FROM transactions")?;
+    let raw_transactions = stmt.query_map([], |row| {
+        Ok(TransactionFE {
+            m_id: row.get(0)?,
+            m_name: row.get(1)?,
+            m_description: row.get(2)?,
+            m_closed: row.get(3)?,
+            m_created: row.get(4)?,
+            m_count_transfers: 0,
+            m_latest_currency_transfer_datetime: None,
+            m_latest_currency_transfer_id: None,
+        })
+    })?;
+    let transactions: Vec<TransactionFE> = raw_transactions.map(|result_transaction| {
+        result_transaction.unwrap()
+    }).collect();
+    Ok(transactions)
+}
+
+fn db_get_transaction(transaction_id: u64, dbconn: State<DbConnection>) -> Result<DetailedTransactionFE, Box<dyn std::error::Error>> {
+    let locked = dbconn.conn.lock().unwrap();
+    let mut stmt = locked.prepare_cached(
+        "SELECT id, name, description, closed, added FROM transactions WHERE id = ?1 LIMIT 1")?;
+    let tranasction = stmt.query_row([transaction_id], |row| { Ok(TransactionFE{
+        m_id: row.get(0)?,
+            m_name: row.get(1)?,
+            m_description: row.get(2)?,
+            m_closed: row.get(3)?,
+            m_created: row.get(4)?,
+            m_count_transfers: 0,
+            m_latest_currency_transfer_datetime: None,
+            m_latest_currency_transfer_id: None,
+    })})?;
+    stmt = locked.prepare_cached(
+        "SELECT ct.id, ct.amount, e_to.id, e_to.name, e_from.id, e_from.name, ct.time 
+                FROM (SELECT * FROM currency_transfer_transaction_link cttl WHERE cttl.transaction_id = ?1) cttl
+                INNER JOIN currency_transfers ct ON cttl.transfer_id = ct.id
+                INNER JOIN entity_accounts ea_to ON ct.to_account = ea_to.id
+                INNER JOIN entity_accounts ea_from ON ct.from_Account = ea_from.id
+                INNER JOIN entities e_to ON ea_to.entity_id = e_to.id
+                INNER JOIN entities e_from ON ea_from.entity_id = e_from.id
+                ORDER BY ct.time DESC, ct.amount DESC, e_to.name ASC"
+    )?;
+    let raw_transfers = stmt.query_map([transaction_id], |row| {
+        print!("{:#?}", row);
+        Ok(TransferFE {
+            m_transfer_id: row.get(0)?,
+            m_type: TransferType::Currency,
+            m_value: row.get(1)?,
+            m_to_id: row.get(2)?,
+            m_to_name: row.get(3)?,
+            m_from_id: row.get(4)?,
+            m_from_name: row.get(5)?,
+            m_time: row.get(6)?,
+        })
+    })?;
+    let transfers: Vec<TransferFE> = raw_transfers.map(|transfer| {
+        transfer.unwrap()
+    }).collect();
+    Ok(DetailedTransactionFE { m_transaction: tranasction, m_transfers: transfers })
+}
+
 #[tauri::command]
-pub fn get_transactions() -> Vec<TransactionFE> {
-    return vec![
-        build_transaction_fe(
-            "Payslip",
-            "getting paid for the work",
-            true,
-            "5:04PM 28/07/24",
-            "5:04PM 28/07/24",
-        ),
-        build_transaction_fe(
-            "Concert",
-            "buy tickets for me and another to that concert that is some time in the future",
-            false,
-            "3:01PM 23/06/24",
-            "5:27PM 24/06/24",
-        ),
-        build_transaction_fe(
-            "kachow",
-            "a very epic trade at the apple store",
-            true,
-            "2:00PM 22/06/24",
-            "3:01PM 25/06/24",
-        ),
-    ]
+pub fn get_transaction(transaction_id: u64, dbconn: State<DbConnection>) -> Result<DetailedTransactionFE, String> {
+    println!("Get: Transaction id={}", transaction_id);
+    db_get_transaction(transaction_id, dbconn)
+    .map_err(|err| err.to_string())
+} 
+
+#[tauri::command]
+pub fn get_transactions(dbconn: State<DbConnection>) -> Result<Vec<TransactionFE>, String> {
+    println!("Get: Transactions");
+    let res = db_get_transactions(dbconn);
+    res.map_err(|err| {
+        err.to_string()
+    })
 } 
 
 // Entities list endpoint
@@ -221,4 +238,39 @@ pub fn get_accounts(dbconn: State<DbConnection>) -> Result<Vec<AccountFE>, Strin
     println!("Get: accounts");
     db_get_accounts(dbconn)
     .map_err(|err| err.to_string())
+}
+
+// Accounts list endpoint
+#[derive(serde::Serialize)]
+#[derive(Debug)]
+pub struct BareAccountFE {
+    m_account_id: u64,
+    m_account_name: String,
+    m_owning_entity_name: String,
+}
+
+fn db_get_bare_accounts(dbconn: State<DbConnection>) -> Result<Vec<BareAccountFE>, Box<dyn std::error::Error>> {
+    let locked = dbconn.conn.lock().unwrap();
+    let mut stmt = locked.prepare_cached(
+        "SELECT ea.id, ea.name, e.name FROM entity_accounts ea INNER JOIN entities e ON ea.entity_id = e.id")?;
+    let raw_entities = stmt.query_map([], |row| {
+        Ok(BareAccountFE {
+            m_account_id: row.get(0)?,
+            m_account_name: row.get(1)?,
+            m_owning_entity_name: row.get(2)?,
+        })
+    })?;
+    let entities: Vec<BareAccountFE> = raw_entities.map(|result_entity| {
+        result_entity.unwrap()
+    }).collect();
+    Ok(entities)
+}
+    
+#[tauri::command]
+pub fn get_bare_accounts(dbconn: State<DbConnection>) -> Result<Vec<BareAccountFE>, String> {
+    println!("Get: bare_accounts");
+    let res = db_get_bare_accounts(dbconn);
+    res.map_err(|err| {
+        err.to_string()
+    })
 }
