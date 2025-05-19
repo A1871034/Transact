@@ -28,9 +28,10 @@
     "windows": [
       {
         "title": "Transact",
-        "width": 1440,
-        "height": 810,
-        "useHttpsScheme": true
+        "width": 1920,
+        "height": 1080,
+        "useHttpsScheme": true,
+        "zoomHotkeysEnabled": true
       }
     ]
   }

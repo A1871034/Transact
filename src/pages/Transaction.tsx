@@ -17,33 +17,37 @@ async function get_transaction(transaction_id: number) {
     return detailed_transaction;
 }
 
-const transfer_types_selection = [
-    {
+const transfer_types_selection = {
+    "Currency": {
         m_icon: "/icons/money-bill-transfer-solid.svg",
         m_label: "Money",
         m_tx_type: TransferType.Currency,
     },
-    {
+    "Item": {
         m_icon: "/icons/dolly-solid.svg",
         m_label: "Item",
         m_tx_type: TransferType.Item,
     },
-    {
+    "Asset": {
         m_icon: "/icons/hand-holding-dollar-solid.svg",
         m_label: "Asset",
         m_tx_type: TransferType.Asset,
     },
-    {
+    "Debt": {
         m_icon: "/icons/landmark-solid.svg",
         m_label: "Debt",
         m_tx_type: TransferType.Debt,
     },
-];
+};
 
 export function showTransactionOverlay(transaction_id: number) {
     const [showNewTf, setShowNewTf] = createSignal(false);
     const [newTfType, setNewTfType] = createSignal<TransferType>();
     const [toShowNewTf, setToShowNewTf] = createSignal<JSXElement>(<></>);
+    
+    const [txName, setTxName] = createSignal<string>();
+    const [txDesc, setTxDesc] = createSignal<string>();
+    const [txClosed, setTxClosed] = createSignal<boolean>();
     
     const [editingTx, setEditingTx] = createSignal(false);
     
@@ -69,18 +73,21 @@ export function showTransactionOverlay(transaction_id: number) {
                 {
                     new_name = (new_name.length == 0) ? tx.m_transaction.m_name : new_name;
                     new_description = (new_description.length == 0) ? tx.m_transaction.m_description : new_description;
-                    console.debug(`Attempting to update tx ${tx.m_transaction.m_name} with\n\tid: ${tx.m_transaction.m_id}\n\tnew_name: ${new_name}\n\tnew_description: ${new_description}\n\tnew_closed: ${closed}`)
-                    try {
-                        await invoke("update_transaction_details", {
-                            transaction_id: tx.m_transaction.m_id,
-                            name: new_name,
-                            description: new_description,
-                            closed: closed,
-                        })
+                    console.debug(`Attempting to update tx ${tx.m_transaction.m_name} with\n\tid: ${tx.m_transaction.m_id}\n\tnew_name: ${new_name}\n\tnew_description: ${new_description}\n\tnew_closed: ${closed}`);
+                    await invoke("update_transaction_details", {
+                        txId: tx.m_transaction.m_id,
+                        name: new_name,
+                        description: new_description,
+                        closed: closed,
+                    }).then(() => {
+                        setTxName(new_name);
+                        setTxDesc(new_description);
+                        setTxClosed(closed);
                         setEditingTx(false);
-                    } catch {
-                        alert("Failed to update transaction details.");
-                    }
+                    })
+                    .catch((err) => {
+                        alert("Failed to update transaction details: " + err);
+                    });
                 } else {
                     setEditingTx(false);
                 }
@@ -127,6 +134,9 @@ export function showTransactionOverlay(transaction_id: number) {
         setShowNewTf(false);
         setNewTfType(TransferType.Currency);
         get_transaction(transaction_id).then((tx) => {
+            setTxName(tx.m_transaction.m_name);
+            setTxDesc(tx.m_transaction.m_description);
+            setTxClosed(tx.m_transaction.m_closed);
             const Transaction = createRoot((): JSX.Element => {
                 return (
                     <div class="tile-container">
@@ -146,35 +156,35 @@ export function showTransactionOverlay(transaction_id: number) {
                                             <th>Value</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody> 
                                         <tr>
                                             <td>Name</td>
                                             <Show when={editingTx()} fallback={
                                                     <>
-                                                        <td>{tx.m_transaction.m_name}</td>
+                                                        <td>{txName()}</td>
                                                     </>
                                                 }>
-                                                <input placeholder={tx.m_transaction.m_name} id="tx-name-input"/>
+                                                <input placeholder={txName()} id="tx-name-input"/>
                                             </Show>
                                         </tr>
                                         <tr>
                                             <td>Description</td>
                                             <Show when={editingTx()} fallback={
                                                     <>
-                                                        <td>{tx.m_transaction.m_description}</td>
+                                                        <td>{txDesc()}</td>
                                                     </>
                                                 }>
-                                                <textarea placeholder={tx.m_transaction.m_description} id="tx-description-input"/>
+                                                <textarea placeholder={txDesc()} id="tx-description-input"/>
                                             </Show>
                                         </tr>
                                         <tr>
                                             <td>Closed</td>
                                             <Show when={editingTx()} fallback={
                                                     <>
-                                                        <td>{String(tx.m_transaction.m_closed)}</td>
+                                                        <td>{String(txClosed())}</td>
                                                     </>
                                                 }>
-                                                <input id="tx-closed-checkbox" type="checkbox" checked={tx.m_transaction.m_closed}/>
+                                                <input id="tx-closed-checkbox" type="checkbox" checked={txClosed()}/>
                                             </Show>
                                         </tr>
                                         <tr>
@@ -185,13 +195,11 @@ export function showTransactionOverlay(transaction_id: number) {
                                             <td>Created</td>
                                             <td>{/*@once*/ database_time_to_string(tx.m_transaction.m_created)}</td>
                                         </tr>
-                                        {/* <tr style="height: 2.5em;">
-                                            <td colspan="2"></td>
-                                        </tr> */}
                                     </tbody>
                                 </table>
+                                <div class="tile-button-spacer"/>
                                 <div class="tile-button tile-button-bl">
-                                    <button style="background-color: var(--red-color);" 
+                                    <button class="bg-red" 
                                         onclick={ (e) => {
                                             if (editingTx()) {
                                                 setEditingTx(false);
@@ -223,17 +231,19 @@ export function showTransactionOverlay(transaction_id: number) {
                             <div id="transaction-transfers">
                                 <table class="dashboard-item interactive">
                                     <colgroup>
+                                        <col span="1" style="width: 10%;" />
                                         <col span="1" style="width: 20%;" />
                                         <col span="1" style="width: 10%;" />
-                                        <col span="1" style="width: 25%;" />
-                                        <col span="1" style="width: 25%;" />
+                                        <col span="1" style="width: 20%;" />
+                                        <col span="1" style="width: 20%;" />
                                         <col span="1" style="width: 20%;" />
                                     </colgroup>
                                     <thead>
                                         <tr class="bg-p">
-                                            <th colspan="5">Transfers</th>
+                                            <th colspan="6">Transfers</th>
                                         </tr>
                                         <tr class="table-header-row sticky-top">
+                                            <th>Type</th>
                                             <th>Name</th>
                                             <th>Value</th>
                                             <th>To</th>
@@ -244,11 +254,19 @@ export function showTransactionOverlay(transaction_id: number) {
                                     <tbody>
                                         <For each={tx.m_transfers} fallback={(
                                             <tr>
-                                                <td colspan="5">No transfers to display</td>
+                                                <td colspan="6">No transfers to display</td>
                                             </tr>
                                         )}>
                                         {(item:TransferFE, _) => (      
                                             <tr>
+                                                <td>
+                                                    <img
+                                                        src={ transfer_types_selection[item.m_type].m_icon }
+                                                        title={ transfer_types_selection[item.m_type].m_label }
+                                                        class="info-icon"
+                                                        draggable="false"
+                                                    />
+                                                </td>
                                                 <td>{((item.m_type) == TransferType.Currency) ? "Money" : item.m_type}</td>
                                                 <td style={valueColoring(item)}>{item.m_value}</td>
                                                 <td>
@@ -269,13 +287,11 @@ export function showTransactionOverlay(transaction_id: number) {
                                             </tr>
                                         )}
                                         </For>
-                                        <Show when={tx.m_transfers.length > 0}>
-                                            <tr style="height: 2.5em; cursor: initial;">
-                                                <td colspan="5"></td>
-                                            </tr>
-                                        </Show>
                                     </tbody>
                                 </table>
+                                <Show when={tx.m_transfers.length > 0}>
+                                    <div class="tile-button-spacer"/>
+                                </Show>
                                 <div class="tile-button tile-button-br">
                                     <button onclick={(e) => {toggleShowTransferTypes(); e.currentTarget?.blur();} }>
                                         <div style={showNewTf() ? "rotate: -45deg" : ""}>
@@ -292,7 +308,7 @@ export function showTransactionOverlay(transaction_id: number) {
                                 </div>
                                 <div id="new-tx-content" class="tile-contents">
                                     <nav id="transfer-type-select">
-                                        <For each={transfer_types_selection}>
+                                        <For each={Object.values(transfer_types_selection)}>
                                             {(tx_type) => (
                                                 <a onclick={() => {handleSetNewTfType(tx_type.m_tx_type)}} class={newTfType() === tx_type.m_tx_type ? "active" : "inactive"} href="#">
                                                     <img src={tx_type.m_icon} class="icon" draggable="false"/>

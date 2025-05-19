@@ -82,6 +82,8 @@ function DropdownSearchL(
     const [items, setItems] = createSignal([]);
     const [displayDropdown, setDisplayDropdown] = createSignal(false);
 
+    const no_search_results_text = "Nothing to Display";
+
     function filterFunc() {
         let must_include = filterBy().toLowerCase();
         let tmp_items: any = [];
@@ -98,11 +100,16 @@ function DropdownSearchL(
     }
 
     function looseFocus() {
-        const hovered = document.querySelectorAll( ":hover" )
+        const hovered = document.querySelectorAll( ":hover" );
+        console.log(hovered);
         if (hovered.length === 0)
             return;
-        if (hovered[hovered.length - 1].getAttribute("id") !== "ds-item-name") 
-            setDisplayDropdown(false)
+        if (hovered[hovered.length - 1].getAttribute("id") !== "ds-item-name")
+            setDisplayDropdown(false);
+        else if (hovered[hovered.length - 1].innerHTML == no_search_results_text) {
+            // More effort than it is worth to keep focus on the input (required to prevent ui bugs).
+            setDisplayDropdown(false);
+        }
     }
     
     createComputed(filterFunc, "");
@@ -142,9 +149,9 @@ function DropdownSearchL(
                                 )}
                             </For>
                             <Show when={items().length == 0}>
-                                <tr id="ds-nothing-to-display">
+                                <tr id="ds-nothing-to-display" style="cursor: default;">
                                     <td id="ds-item-name">
-                                        Nothing to Display
+                                        {no_search_results_text}
                                     </td>
                                 </tr>
                             </Show>

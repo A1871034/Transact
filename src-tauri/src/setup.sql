@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
-    closed BOOLEAN NOT NULL DEFAULT 0,
+    closed BOOLEAN NOT NULL DEFAULT 0 CHECK (closed = 0 OR closed = 1),
     added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
     latest_currency_transfer_id INTEGER DEFAULT NULL,
     PRIMARY KEY (id),

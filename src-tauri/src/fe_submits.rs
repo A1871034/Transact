@@ -49,6 +49,20 @@ fn db_submit_new_transaction(name: &str, description: &str, dbconn: State<DbConn
     Ok(rowid)
 }
 
+fn db_update_transaction_details(tx_id: u64, name: &str, description: &str, closed: bool, dbconn: State<DbConnection>) -> Result<bool, Box<dyn std::error::Error>>{
+    let mut lock = dbconn.conn.lock().unwrap();
+    let tx = lock.transaction()?;
+    let affected = tx.execute(
+        "UPDATE transactions SET name = ?1, description = ?2, closed = ?3 WHERE id = ?4", 
+        [name, description, (closed as u64).to_string().as_str(), tx_id.to_string().as_str()])?;
+    if affected != 1 {
+        return Err(format!("Unexpected number of rows affected ({}).", affected).into());
+    }
+    tx.commit()?;
+    Ok(true)
+}
+
+
 #[tauri::command]
 pub fn submit_new_entity(name: &str, description: &str, dbconn: State<DbConnection> ) -> Result<u64, String> {
     println!("Submit: new_entity name={}, description={}", name, description);
@@ -75,6 +89,16 @@ pub fn submit_new_transaction(name: &str, description: &str, dbconn: State<DbCon
         });
     println!("new_tx with id={}", new_tx_id.clone()?);
     new_tx_id
+}
+
+#[tauri::command]
+pub fn update_transaction_details(tx_id: u64, name: &str, description: &str, closed: bool, dbconn: State<DbConnection> ) -> Result<bool, String> {
+    println!("Submit: update_transaction_details tx_id={}, name={}, description={}, closed={}", tx_id, name, description, closed);
+    let res = db_update_transaction_details(tx_id, name, description, closed, dbconn).map_err(|err| {
+        err.to_string()
+    });
+    println!("updated tx with id={}", tx_id);
+    res
 }
 
 #[tauri::command]

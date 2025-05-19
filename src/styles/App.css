@@ -26,6 +26,7 @@ input, textarea, select {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
+  margin: .25em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
@@ -34,6 +35,10 @@ input, textarea, select {
   transition: border-color 0.25s;
   box-shadow: var(--drop-shadow);
   outline: none;
+}
+
+textarea {
+  vertical-align: top;
 }
 
 input:focus {
@@ -158,6 +163,13 @@ nav a:hover {
   color: var(--text-color-2);
 }
 
+img.info-icon {
+  height: 1.875em;
+  width: 1.875em;
+  vertical-align: middle;
+  filter: var(--filter-text-color-1);
+}
+
 img.icon {
   height: 1.5em;
   width: 1.5em;
@@ -227,7 +239,7 @@ button {
   outline: none;
   box-shadow: var(--drop-shadow);
   color: var(--text-color-2);
-  padding: .5em .5em;
+  padding: .375em
 }
 
 button:hover {
@@ -244,8 +256,8 @@ button:active {
 }
 
 button img {
-  height: 2em;
-  width: 2em;
+  height: 1.75em;
+  width: 1.75em;
   filter: var(--filter-text-color-2);
   display: block;
 }
@@ -321,15 +333,21 @@ div.tile-button {
 }
 
 div.tile-button.tile-button-br {
-  bottom: -.25em;
-  right: -.25em;
+  bottom: calc(-.25em + 1px);
+  right: calc(-.25em + 1px);
   border-radius: .5em 0;
 }
 
 div.tile-button.tile-button-bl {
-  bottom: -.25em;
-  left: -.25em;
+  bottom: calc(-.25em + 1px);
+  left: calc(-.25em + 1px);
   border-radius: 0 .5em;
+}
+
+div.tile-button-spacer {
+  height: 2.5em;
+  width: 100%;
+  background-color: transaprent;
 }
 
 .abs-br {
@@ -431,6 +449,9 @@ div#transaction-transfers {
 
 .bg-p {
   background-color: var(--primary-color) !important;
+}
+.bg-red {
+  background-color: var(--red-color);
 }
 
 .sticky-top {

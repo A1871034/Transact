@@ -93,7 +93,6 @@ fn db_get_transaction(transaction_id: u64, dbconn: State<DbConnection>) -> Resul
                 ORDER BY ct.time DESC, ct.amount DESC, e_to.name ASC"
     )?;
     let raw_transfers = stmt.query_map([transaction_id], |row| {
-        print!("{:#?}", row);
         Ok(TransferFE {
             m_transfer_id: row.get(0)?,
             m_type: TransferType::Currency,

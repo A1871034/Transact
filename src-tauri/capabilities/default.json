@@ -1,0 +1,11 @@
+{
+    "identifier": "main",
+    "description": "permissions setup after v2",
+    "local": true,
+    "windows": [
+        "main"
+    ],
+    "permissions": [
+        "core:webview:allow-set-webview-zoom"
+    ]
+}
