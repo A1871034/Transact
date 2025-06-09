@@ -12,11 +12,16 @@
           "args": [
             "build",
             "--manifest-path=./src-tauri/Cargo.toml",
-            "--no-default-features"
+            "--no-default-features",
           ]
         },
         // task for the `beforeDevCommand` if used, must be configured in `.vscode/tasks.json`
-        "preLaunchTask": "ui:dev"
+        "preLaunchTask": "ui:dev",
+        "env": {
+          "RUST_BACKTRACE": "1",
+          "WEBKIT_DISABLE_DMABUF_RENDERER": "1"
+        },
+        "cwd": "${workspaceFolder}/src-tauri"
       },
       {
         "type": "lldb",
@@ -26,7 +31,11 @@
           "args": ["build", "--release", "--manifest-path=./src-tauri/Cargo.toml"]
         },
         // task for the `beforeBuildCommand` if used, must be configured in `.vscode/tasks.json`
-        "preLaunchTask": "ui:build"
+        "preLaunchTask": "ui:build",
+        "env": {
+          "RUST_BACKTRACE": "1",
+          "WEBKIT_DISABLE_DMABUF_RENDERER": "1"
+        }
       }
     ]
   }

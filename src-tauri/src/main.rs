@@ -19,7 +19,11 @@ use fe_submits::*;
 
 fn setup_sqlite() -> Result<rusqlite::Connection> {
     let conn = Connection::open(DATABASE_PATH)?;
-    let sql_setup_string = read_to_string(SQL_SETUP_PATH).expect("Failed to read SQL_SETUP_PATH");
+    let sql_setup_string = read_to_string(SQL_SETUP_PATH).unwrap_or_else(|error| {
+        let path = std::env::current_dir().expect("Failed to get current directory");
+        println!("The current directory is {}", path.display());
+        panic!("Failed to read SQL_SETUP_PATH=\"{SQL_SETUP_PATH}\": {error:?}");
+    });
     let sql_setup_str = sql_setup_string.as_str();
     conn.execute_batch(sql_setup_str)?;
     Ok(conn)
