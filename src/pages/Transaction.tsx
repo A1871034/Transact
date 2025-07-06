@@ -80,6 +80,9 @@ export function showTransactionOverlay(transaction_id: number) {
                         description: new_description,
                         closed: closed,
                     }).then(() => {
+                        tx.m_transaction.m_name = new_name;
+                        tx.m_transaction.m_description = new_description;
+                        tx.m_transaction.m_closed = closed;
                         setTxName(new_name);
                         setTxDesc(new_description);
                         setTxClosed(closed);
