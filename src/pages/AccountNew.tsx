@@ -3,26 +3,20 @@ import { invoke } from "@tauri-apps/api/core";
 
 import { showOverlay, closeOverlay } from "../components/Overlay";
 import { get_time_as_if_database } from "../Utils";
-import { DropdownSearch } from "../components/DropdownSearch";
-import { AccountFE } from "../FrontEndTypes";
+import { DropdownSearchL } from "../components/DropdownSearch";
+import { AccountFE, BareEntityFE } from "../FrontEndTypes";
 
 import { accounts, setAccounts } from "./Accounts";
-
-
-interface bareEntity {
-    m_id:number,
-    m_name:string
-}
 
 export function showNewAccountOverlay() {
     const [name, setName] = createSignal("");
     const [newAccEntityId, setNewAccEntityId] = createSignal(-1);
     const [chosenEntityName, setChosenEntityName] = createSignal("");
-    const [accSearchEntities, setAccSearchEntities] = createSignal([] as Array<bareEntity>);
+    const [accSearchEntities, setAccSearchEntities] = createSignal([] as Array<BareEntityFE>);
 
     async function getAccSearchEntities() {
         await invoke("get_bare_entities")
-            .then((bare_entities) => {setAccSearchEntities(bare_entities as Array<bareEntity>)})
+            .then((bare_entities) => {setAccSearchEntities(bare_entities as Array<BareEntityFE>)})
             .catch();
     }
     getAccSearchEntities();
@@ -51,8 +45,11 @@ export function showNewAccountOverlay() {
     }
 
     const entityDropdownSearch = createRoot((): JSX.Element => {
-        return DropdownSearch(accSearchEntities, setNewAccEntityId, "m_id", "m_name", setChosenEntityName);
+        return DropdownSearchL("Entity...", accSearchEntities, 
+                (inp: BareEntityFE) => {return inp.m_name}, 
+                (inp: BareEntityFE) => {setNewAccEntityId(inp.m_id); setChosenEntityName(inp.m_name); });
     }, getOwner());
+    
     const AccountNew = (
         <>
             <form onSubmit={(e) => { e.preventDefault(); submitNewAccount(); }}>

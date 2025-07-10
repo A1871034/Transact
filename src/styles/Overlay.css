@@ -38,7 +38,7 @@ div#overlay-page {
     background-color: var(--background-color);
     border-radius: 1em;
     max-height: 100%;
-    overflow: hidden;
+    /* overflow: hidden; */
 
     /*animation-name: opacity-fade-in;
     animation-duration: .05s;
@@ -59,7 +59,7 @@ div#overlay-page.maximised {
 div#overlay-content {
     padding: 0.5em .75em;
     max-height: calc(100vh - 3em);
-    overflow: scroll;
+    /* overflow: scroll; */
 }
 
 div#overlay-content form {

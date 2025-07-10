@@ -7,32 +7,71 @@ div.dropdown-search {
     margin: auto;
 }
 
-div#ds-display-selected {
+div.ds-display-selected {
     min-width: 5em;
     max-width: 11em;
     margin: 0.3em auto 0 auto;
 }
 
-input#ds-search {
+div#testsdd {
+    background-color: black;
+}
+
+input.ds-search {
     min-width: 5em;
     max-width: 11em;
 }
 
-#ds-nothing-to-display {
+.ds-nothing-to-display {
     background-color: var(--tertiary-color);
-    color: var(--text-color-1)
+    color: var(--text-color-1);
+    cursor: default;
 }
 
-div.dropdown {
+ul.dropdown {
     position: absolute;
-    top: -3em;
-    left: calc(100% + 0.5em);
+    top: -1em;
+    left: 100%;
     width: max-content;
     max-width: 20em;
     max-height: 10em;
     overflow: scroll;
     border: 1px solid var(--accent-color);
     border-radius: 0.5em;
-    box-shadow: 0 0 0.75em rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 1.5em rgba(0, 0, 0, 0.7);
+    list-style-type: none;
+    padding: 0em;
     z-index: 2;
+}
+
+ul.dropdown li {
+    list-style: none;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+ul.dropdown li:first-child {
+    padding-top: 0.25em;
+}
+
+ul.dropdown li:last-child {
+    padding-bottom: 0.125em;
+}
+
+ul.dropdown li.ds-item-name:hover {
+    background-color: var(--primary-color);
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+ul.dropdown li.ds-selected.ds-item-name {
+    background-color: var(--accent-color);
+}
+
+ul.dropdown li:nth-child(odd) {
+    background-color: var(--tertiary-color);
+}
+
+ul.dropdown li:nth-child(even) {
+    background-color: var(--secondary-color);
 }
