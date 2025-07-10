@@ -1,10 +1,10 @@
-import { createRoot, createSignal, Show, JSX, For, JSXElement, Accessor, Setter } from "solid-js";
+import { createRoot, createSignal, Show, JSX, For, JSXElement } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 
 import { DetailedTransactionFE, TransferFE, TransferType } from "../FrontEndTypes";
 import { database_time_to_string } from "../Utils";
 
-import { NewCurrencyTransfer } from "../components/NewTransfers";
+import { NewCurrencyTransfer, NewItemTransfer } from "../components/NewTransfers";
 import { closeOverlay, showOverlay } from "../components/Overlay";
 import { getShowNavLabels } from "../App";
 import { showEntityOverlay } from "./Entity";
@@ -102,8 +102,12 @@ export function showTransactionOverlay(transaction_id: number) {
     function handleSetNewTfType(newTfType: TransferType) {
         switch (newTfType) {
             case TransferType.Currency:
-                setToShowNewTf(NewCurrencyTransfer(transaction_id, (_) => {closeOverlay(); newTranssactionPage()}));
+                setToShowNewTf(NewCurrencyTransfer(transaction_id, (_) => {closeOverlay(); newTransactionPage()}));
                 setTimeout(() => {document.getElementById("amount")?.focus()}, 0);
+                break;
+            case TransferType.Item:
+                setToShowNewTf(NewItemTransfer(transaction_id, (_) => {closeOverlay(); newTransactionPage()}))
+                // setTimeout(() => {document.getElementById("amount")?.focus()}, 0);
                 break;
             default:
                 alert("Unimplmented transfer type :(")
@@ -133,7 +137,7 @@ export function showTransactionOverlay(transaction_id: number) {
         return ret;
     }
             
-    function newTranssactionPage() {
+    function newTransactionPage() {
         setShowNewTf(false);
         setNewTfType(TransferType.Currency);
         get_transaction(transaction_id).then((tx) => {
@@ -334,5 +338,5 @@ export function showTransactionOverlay(transaction_id: number) {
         });
     }
 
-    newTranssactionPage();
+    newTransactionPage();
 }

@@ -11,6 +11,7 @@ import Transfers from './pages/Transfers'
 import Transactions from './pages/Transactions';
 import Entities from './pages/Entities';
 import Settings from "./pages/Settings";
+import Items from "./pages/Items";
 
 /* Themes */
 const [darkMode, setDarkMode] = createSignal(true);
@@ -61,6 +62,12 @@ function App() {
       "icon": "/icons/list-ul-solid.svg",
       "name": "Transactions",
       "component": Transactions,
+    },
+    "/items": {
+      "path": "/items",
+      "icon": "/icons/dolly-solid.svg",
+      "name": "Items",
+      "component": Items,
     },
     "/transfers": {
       "path": "/transfers",

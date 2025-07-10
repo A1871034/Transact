@@ -273,3 +273,96 @@ pub fn get_bare_accounts(dbconn: State<DbConnection>) -> Result<Vec<BareAccountF
         err.to_string()
     })
 }
+
+// Items list endpoint
+#[derive(serde::Serialize)]
+#[derive(Debug)]
+pub struct ItemFE {
+    m_id: u64,
+    m_name: String,
+    m_description: String,
+    // m_category_id: u64,
+    // m_brand_id: u64,
+    m_created: u64,
+}
+
+#[tauri::command]
+pub fn get_items(dbconn: State<DbConnection>) -> Result<Vec<ItemFE>, String> {
+    println!("Get: items");
+    let res = db_get_items(dbconn);
+    res.map_err(|err| {
+        err.to_string()
+    })
+}
+
+fn db_get_items(dbconn: State<DbConnection>) -> Result<Vec<ItemFE>, Box<dyn std::error::Error>> {
+    let lock = dbconn.conn.lock().unwrap();
+    let mut stmt = lock.prepare_cached(
+        "SELECT i.id, i.name, i.description, i.added FROM items i;"
+    )?;
+    let raw_items = stmt.query_map([], |row| {
+        Ok(ItemFE {
+            m_id: row.get(0)?,
+            m_name: row.get(1)?,
+            m_description: row.get(2)?,
+            m_created: row.get(3)?,
+        })
+    })?;
+    let items: Vec<ItemFE> = raw_items.map(|result_account| {
+        result_account.unwrap()
+    }).collect();
+    Ok(items)
+}
+
+#[derive(serde::Serialize)]
+#[derive(Debug)]
+struct PackagedItemFE {
+    m_id: u64,
+    m_qty: u64,
+    m_unit: String,
+    m_units_per_qty: f64,
+    m_created: u64,
+}
+
+// Items list endpoint
+#[derive(serde::Serialize)]
+#[derive(Debug)]
+pub struct DetailedItemFE {
+    m_item: ItemFE,
+    m_packaged_items: Vec<PackagedItemFE>,
+}
+
+fn db_get_item(item_id: u64, dbconn: State<DbConnection>) -> Result<DetailedItemFE, Box<dyn std::error::Error>> {
+    let locked = dbconn.conn.lock().unwrap();
+    let mut stmt = locked.prepare_cached(
+        "SELECT id, name, description, added FROM items WHERE id = ?1 LIMIT 1")?;
+    let item = stmt.query_row([item_id], |row| { Ok(ItemFE{
+        m_id: row.get(0)?,
+        m_name: row.get(1)?,
+        m_description: row.get(2)?,
+        m_created: row.get(3)?,
+    })})?;
+    stmt = locked.prepare_cached(
+        "SELECT p.id, p.qty, p.unit, p.units_per_qty, p.added FROM packaged_item p WHERE p.item_id = ?1"
+    )?;
+    let raw_transfers = stmt.query_map([item_id], |row| {
+        Ok(PackagedItemFE {
+            m_id: row.get(0)?,
+            m_qty: row.get(1)?,
+            m_unit: row.get(2)?,
+            m_units_per_qty: row.get(3)?,
+            m_created: row.get(4)?,
+        })
+    })?;
+    let packaged_items: Vec<PackagedItemFE> = raw_transfers.map(|transfer| {
+        transfer.unwrap()
+    }).collect();
+    Ok(DetailedItemFE { m_item: item, m_packaged_items: packaged_items })
+}
+
+#[tauri::command]
+pub fn get_item(item_id: u64, dbconn: State<DbConnection>) -> Result<DetailedItemFE, String> {
+    println!("Get: Item id={}", item_id);
+    db_get_item(item_id, dbconn)
+    .map_err(|err| err.to_string())
+} 

@@ -53,11 +53,22 @@ CREATE TABLE IF NOT EXISTS items (
     id INTEGER NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
-    qty INTEGER,
-    unit TEXT,
-    per_qty_unit_value DECIMAL
+    added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
+    PRIMARY KEY (id)
 );
+    -- brand_id INTEGER NOT NULL,
     -- category_id INTEGER NOT NULL,
+
+CREATE TABLE IF NOT EXISTS packaged_item (
+    id INTEGER NOT NULL,
+    item_id INTEGER NOT NULL,
+    qty INTEGER NOT NULL,
+    unit TEXT NOT NULL,
+    units_per_qty DECIMAL NOT NULL,
+    added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
+    PRIMARY KEY (id),
+    FOREIGN KEY (item_id) REFERENCES items(id)
+);
 
 CREATE TABLE IF NOT EXISTS item_transfers (
     id INTEGER NOT NULL,

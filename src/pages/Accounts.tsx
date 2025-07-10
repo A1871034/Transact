@@ -47,7 +47,7 @@ function Accounts() {
                         <tr onclick={() => {showAccountOverlay(item.m_id, item.m_name)}}>
                             <td>{item.m_name}</td>
                             <td><span onclick={(e) => {e.stopPropagation(); showEntityOverlay(item.m_entity_id, item.m_entity_name)}} class="interactive">{item.m_entity_name}</span></td>
-                            <td>{database_time_to_string(item.m_added)}</td>
+                            <td>{database_time_to_string(item.m_created)}</td>
                         </tr>
                     )}
                     </For>

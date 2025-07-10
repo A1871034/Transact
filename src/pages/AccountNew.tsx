@@ -40,7 +40,7 @@ export function showNewAccountOverlay() {
                     m_name: name(),
                     m_entity_id: newAccEntityId(),
                     m_entity_name: chosenEntityName(),
-                    m_added: get_time_as_if_database(),
+                    m_created: get_time_as_if_database(),
                 }
                 setAccounts(accounts().concat(new_entity as never));
                 closeOverlay();

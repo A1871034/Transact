@@ -1,7 +1,7 @@
 import { Accessor, createRoot, createSignal, getOwner, JSX } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
 
-import { BareAccountFE } from '../FrontEndTypes';
+import { BareAccountFE, BareEntityFE, BareItemFE } from '../FrontEndTypes';
 import { date_to_db_time } from "../Utils"
 
 import { DropdownSearchL } from './DropdownSearch';
@@ -17,22 +17,6 @@ function NewCurrencyTransfer(
     const [toAccId, setToAccId] = createSignal<number>();
     const [fromAccId, setFromAccId] = createSignal<number>();
     const [searchAccounts, setSearchAccounts] = createSignal<BareAccountFE[]>();
-
-    // function getNewTransferFE(new_transfer_id: number): TransferFE {
-    //     let to_account = searchAccounts()?.find((item) => {item.m_account_id == toAccId()})
-    //     let from_account = searchAccounts()?.find((item) => {item.m_account_id == fromAccId()})
-    //     let tmp: TransferFE = {
-    //         m_transfer_id: new_transfer_id,
-    //         m_type: TransferType.Currency,
-    //         m_value: amount(),
-    //         m_to_id: to_account!.,
-    //         m_to_name to_account!.,
-    //         m_from_id ,
-    //         m_from_name,
-    //         m_time: date_to_db_time(new Date(date() + " " + time())),
-    //     }
-    //     return {};
-    // }
 
     async function getSearchAccounts() {
         await invoke("get_bare_accounts")
@@ -59,11 +43,6 @@ function NewCurrencyTransfer(
         }
         
         const datetime = new Date(date() + " " + time());
-        
-        console.log(datetime);
-        date_to_db_time(datetime);
-        
-        console.log(amount());
         
         try {
             let res:number = await invoke("submit_new_currency_transfer", {
@@ -112,6 +91,7 @@ function NewCurrencyTransfer(
                     id="amount"
                     type="number"
                     step="0.01"
+                    min="0.01"
                     onChange={(e) => setAmount(Number(e.currentTarget.value))}
                     placeholder="Transfered amount..."
                     required
@@ -152,4 +132,168 @@ function NewCurrencyTransfer(
 }
 
 
-export { NewCurrencyTransfer };
+function NewItemTransfer(
+    transaction_id: number, 
+    callback: ((new_transfer_id: number) => void) = () => {}
+    ): JSX.Element 
+{
+    const [amount, setAmount] = createSignal(-1);
+    const [time, setTime] = createSignal<string>();
+    const [date, setDate] = createSignal<string>();
+    const [toEntityId, setToEntityId] = createSignal<number>();
+    const [fromEntityId, setFromEntityId] = createSignal<number>();
+    const [itemId, setItemId] = createSignal<number>();
+    const [searchEntities, setSearchEntities] = createSignal<BareEntityFE[]>();
+    const [items, setItems] = createSignal<BareItemFE[]>();
+
+    async function getItems() {
+        await invoke("get_bare_items")
+            .then((recv_items) => {
+                if (recv_items instanceof Array) {
+                    setItems(recv_items as BareItemFE[])
+                    console.debug("received bare items: ", items());           
+                } else {
+                    throw "Received items are not an array"
+                }
+            })
+            .catch((error) => console.error(error));
+    };
+
+    async function getSerachEntities() {
+        await invoke("get_bare_entities")
+            .then((recv_entities) => {
+                if (recv_entities instanceof Array) {
+                    setSearchEntities(recv_entities as BareEntityFE[])
+                    console.debug("received bare entities: ", searchEntities());           
+                } else {
+                    throw "Received entities are not an array"
+                }
+            })
+            .catch((error) => console.error(error));
+    };
+
+    async function submit() {
+        if (itemId() === undefined) {
+            alert("Please select an item");
+            return;
+        }
+
+        if ((toEntityId() === undefined) || (fromEntityId() == undefined)) {
+            alert("Select a to and from account");
+            return;
+        }
+        
+        if ((toEntityId() === fromEntityId())) {
+            alert("To and from accounts cannot be the same");
+            return;
+        }
+        
+        const datetime = new Date(date() + " " + time());
+        
+        console.log(datetime);
+        date_to_db_time(datetime);
+        
+        console.log(amount());
+        
+        try {
+            let res:number = await invoke("submit_new_item_transfer", {
+                amount: amount(),
+                toAccountId: toEntityId()!,
+                fromAccountId: fromEntityId()!,
+                time: date_to_db_time(datetime),
+                transactionId: transaction_id
+            });
+            console.debug("Status submit_new_item_transfer <= currency_transfer_id ", res);
+            callback(res);
+        } catch (error) {
+            console.log("Failed to submit: " + error);
+            alert("Failed to submit.");
+        }
+    }
+    
+    getSerachEntities();
+    getItems();
+    const toEntitySearch = createRoot((): JSX.Element => {
+        return DropdownSearchL("To Account...", searchEntities, 
+            (inp: BareEntityFE) => {
+                return inp.m_name;
+            },
+            (inp: BareEntityFE) => {
+                setToEntityId(inp.m_id);
+            }
+        );
+    }, getOwner());
+    const fromEntitySearch = createRoot((): JSX.Element => {
+        return DropdownSearchL("From Account...", searchEntities as Accessor<BareEntityFE[]>, 
+            (inp: BareEntityFE) => {
+                return inp.m_name;
+            },
+            (inp: BareEntityFE) => {
+                setToEntityId(inp.m_id);
+            }
+        );
+    }, getOwner());
+    const itemSearch = createRoot((): JSX.Element => {
+        return DropdownSearchL("Item...", items, 
+            (inp: BareItemFE) => {
+                return inp.m_name;
+            },
+            (inp: BareItemFE) => {
+                setItemId(inp.m_id);
+            }
+        );
+    }, getOwner());
+
+    return createRoot((): JSX.Element => { return (
+    <form class="flex-row" onSubmit={(e) => { e.preventDefault(); submit() }}>
+        <div>
+            {itemSearch}
+            <br/>
+            <label for="qty">Quantity: </label>
+            <input
+                id="qty"
+                type="number"
+                step="0.000000001"
+                onChange={(e) => setAmount(Number(e.currentTarget.value))}
+                placeholder={`${((items() === undefined) || (itemId() == undefined)) ? "Qty of item..." : items()![itemId()!].m_unit}`}
+                // disabled={((items() === undefined) || (itemId() == undefined)) ? true : false}
+                class="rm-spinner"
+                required
+                autofocus
+                />
+        </div>
+        <div>
+            <div>
+                <label for="date">Date: </label>
+                <input
+                    id="date"
+                    type="Date"
+                    min="1970-01-01"
+                    onChange={(e) => setDate(e.currentTarget.value)}
+                    required
+                    />
+            </div>
+            <br/>
+            <div>
+                <label for="time">Time: </label>
+                <input
+                    id="time"
+                    type="Time"
+                    onChange={(e) => setTime(e.currentTarget.value)}
+                    required
+                    />
+            </div>
+            <br/>
+        </div>
+        <div>
+            {toEntitySearch}
+            <br/>
+            {fromEntitySearch}
+        </div>
+        <button type="submit"><h2>Submit</h2></button>
+    </form>
+    ) }, getOwner());
+}
+
+
+export { NewCurrencyTransfer, NewItemTransfer };
