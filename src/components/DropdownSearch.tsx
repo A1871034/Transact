@@ -1,38 +1,64 @@
 import '../styles/DropdownSearch.css'
 
-import { Accessor, createComputed, createSignal, For, JSX, Show } from 'solid-js';
+import { Accessor, createComputed, createEffect, createSignal, For, JSX, Show } from 'solid-js';
 
-function DropdownSearchL(
+// TODO: Add support for arbitrary depth recursive dropdowns.
+//  Interface with vec instead of accessor? i.e. "interface A {cur: T[], nxt: A}".
+//  Ideally support for either or.
+
+// TODO: Add function to close the dropdown?.
+
+function DropdownSearchL<T>(
     placeholder: string,
-    item_accessor: Accessor<any[] | undefined>,
-    display_lambda: (inp: any) => string,
-    setter_lambda: (inp: any) => void,
+    item_accessor: Accessor<T[] | undefined>,
+    display_lambda: (inp: T) => string,
+    setter_lambda: (inp: T) => void,
 ): JSX.Element {
     const [selectedStr, setSelectedStr] = createSignal("None Selected...");
     const [filterBy, setFilterBy] = createSignal("");
-    const [items, setItems] = createSignal([]);
+    const [items, setItems] = createSignal<T[]>([]);
     const [displayDropdown, setDisplayDropdown] = createSignal(false);
+    
+    const [dsIds, setDsIds] = createSignal<number[]>([]);
+    const [selectedDsId, setSelectedDsId] = createSignal<number | undefined>();
+    const [selectedDsIdx, setSelectedDsIdx] = createSignal<number | undefined>();
+    const [keyboardHoverIdx, setKeyboardHoverIdx] = createSignal<number | undefined>();
 
     const no_search_results_text = "Nothing to Display";
 
     function filterFunc() {
         let must_include = filterBy().toLowerCase();
-        let tmp_items: any = [];
+        let tmp_items: T[] = [];
+        let tmp_ds_ids: number[] = [];
         if (item_accessor() === undefined) {
             return;
         }
-
+        
+        // We assume that order of returned items is constant.
+        let ds_id = 0;
         for (const item of item_accessor()!) {
             if (display_lambda(item).toLowerCase().includes(must_include)) {
                 tmp_items.push(item);
+                tmp_ds_ids.push(ds_id);
             }
+            ds_id++;
         }
+        
+        // This section effectively acts as an "on resulting list changed callback"
+        // Invalidate the known index of any selection before updating the lists.
+        setKeyboardHoverIdx(undefined);
+        setSelectedDsIdx(undefined);
         setItems(tmp_items);
+        setDsIds(tmp_ds_ids);
     }
+    
+    createComputed(filterFunc, "");
 
     function looseFocus() {
+        setKeyboardHoverIdx(undefined);
         const hovered = document.querySelectorAll( ":hover" );
-        console.log(hovered);
+        console.debug("Dropdown lost focus, mouse hovering the following element");
+        console.debug(hovered);
         if (hovered.length === 0)
             return;
         if (!hovered[hovered.length - 1].classList.contains("ds-item-name"))
@@ -44,8 +70,10 @@ function DropdownSearchL(
     }
 
     let dropdownRef: HTMLUListElement | undefined;
-
+    
+    // TODO: Create reorientDropdown function which only adjusts height if above and left placement if on left (all on filter update).
     function orientDropdown() {
+        if (dropdownRef === undefined) {return}
         dropdownRef = dropdownRef!;
         let covering = false;
 
@@ -85,18 +113,156 @@ function DropdownSearchL(
             }
         }
     }
-    
-    createComputed(filterFunc, "");
+
+    function openDropdown() {
+        setDisplayDropdown(true);
+        orientDropdown();
+        if (selectedDsIdx() !== undefined) {
+            conditionalScrollToY(dropdownRef?.children[selectedDsIdx()!] as HTMLLIElement);
+        }
+    }
+
+    function dsKeyboardControls(e: KeyboardEvent) {
+        let stop_bubble = true;
+        switch (e.key) {
+            case "Escape":
+                setKeyboardHoverIdx(undefined);
+                setDisplayDropdown(false);
+                (e.target as (HTMLInputElement | null))?.blur();
+                break;
+            case "Enter":
+                // Open the dropdown if there is none.
+                if (!displayDropdown()) {
+                    openDropdown();
+                    e.preventDefault();
+                    break;
+                }
+
+                // Select the hovered item.
+                if (keyboardHoverIdx() !== undefined) {
+                    setDisplayDropdown(false);
+                    const item: T = items()[keyboardHoverIdx()!];
+                    setSelectedDsId(dsIds()[keyboardHoverIdx()!]);
+                    setKeyboardHoverIdx(undefined);
+                    setter_lambda(item);
+                    setSelectedStr(display_lambda(item));
+                    e.preventDefault();
+                    break;
+                }
+
+                //  Select the only item.
+                if (items().length == 1) {
+                    setDisplayDropdown(false);
+                    const item: T = items()[0];
+                    setSelectedDsId(dsIds()[0]);
+                    setter_lambda(item);
+                    setSelectedStr(display_lambda(item));
+                    e.preventDefault();
+                }
+                break;
+            case "Tab":
+                if (!displayDropdown()) {break}
+                setDisplayDropdown(false);
+                if (selectedDsId() !== undefined) {break}
+
+                if (items().length == 1) {
+                    //  Select the only item.
+                    const item: T = items()[0];
+                    setSelectedDsId(dsIds()[0]);
+                    setter_lambda(item);
+                    setSelectedStr(display_lambda(item))
+                }
+                break;
+            case "ArrowUp":
+                if (!(items().length > 0)) {break}
+                e.preventDefault();
+
+                // "Hover" the bottom element OR above selected if nothing is hovered.
+                if ((keyboardHoverIdx() === undefined)) {
+                    if ((selectedDsIdx() === undefined) || (selectedDsIdx()! == 0)) {
+                        setKeyboardHoverIdx(items().length - 1);
+                    } else {
+                        // Must be an item selected that is not at the top, hover above that.
+                        setKeyboardHoverIdx(selectedDsIdx()! - 1);
+                    }
+                    break;
+                }
+
+                if (keyboardHoverIdx()! > 0) {
+                    setKeyboardHoverIdx(keyboardHoverIdx()! - 1);
+                }
+                break;
+            case "ArrowRight":
+                // TODO: Expand to submenu? might need to leave this to enter...
+                break;
+            case "ArrowDown":
+                if (!(items().length > 0)) {break}
+                e.preventDefault();
+
+                // "Hover" the top element OR below selected if nothing is hovered.
+                if ((keyboardHoverIdx() === undefined)) {
+                    if ((selectedDsIdx() === undefined) || (selectedDsIdx()! >= (items().length - 1))) {
+                        setKeyboardHoverIdx(0);
+                    } else {
+                        // Must be an item selected that is not at the bottom, hover below that.
+                        setKeyboardHoverIdx(selectedDsIdx()! + 1);
+                    }
+                    break;
+                }
+
+                if (keyboardHoverIdx()! < (items().length - 1)) {
+                    setKeyboardHoverIdx(keyboardHoverIdx()! + 1);
+                }
+                break;
+            case "ArrowLeft":
+                break
+            default:
+                stop_bubble = false;
+                break;
+        }
+
+        if (stop_bubble) {
+            e.stopPropagation();
+        }
+    }
+
+    function updateSelectedIdx(i: number): Boolean {
+        setSelectedDsIdx(i); 
+        return true; 
+    }
+
+    function conditionalScrollToY(elem: HTMLLIElement) {
+        if (elem.parentElement === undefined) {
+            return;
+        }
+
+        const rect = elem.getBoundingClientRect();
+        const parent_rect = elem.parentElement!.getBoundingClientRect();
+
+        if ((rect.top < parent_rect.top) || 
+            (rect.bottom > parent_rect.bottom)) {
+            elem.scrollIntoView(); 
+        }
+    }
 
     return (<>
-        <div class="dropdown-search">
+        <div class="dropdown-search"
+            onkeydown={dsKeyboardControls}>
             <div>
                 <input
                     class="ds-search"
                     type="text"
-                    onFocusIn={(e) => {e.preventDefault(); setDisplayDropdown(true); orientDropdown(); setTimeout(() => {e.target.select();}, 0)}}
+                    onclick={(e) => {e.stopImmediatePropagation(); openDropdown(); }}
+                    onFocusIn={openDropdown}
                     onFocusOut={looseFocus}
-                    onkeyup={(e) => {setFilterBy(e.currentTarget.value); orientDropdown()}}
+                    oninput={(e) => {
+                        setFilterBy(e.currentTarget.value);
+                        if (!displayDropdown()) {
+                            openDropdown();
+                        } else {
+                            orientDropdown();
+                        }
+                    }}
                     placeholder={placeholder}
                 /><br/>
                 <div class="ds-display-selected" title={selectedStr()}>
@@ -112,13 +278,24 @@ function DropdownSearchL(
                                 {no_search_results_text}
                             </li>
                     }>
-                        {(item) => (
-                        <li class={"ds-item-name"+((selectedStr() == display_lambda(item)) ? " ds-selected" : "")}
-                            onclick={(e) => {
-                                e.stopPropagation();
+                        {(item: T, i) => (
+                        <li ref={elem => {
+                                createEffect(() => {if ((keyboardHoverIdx() == i())) {conditionalScrollToY(elem)}
+                            })}}
+                            class={"ds-item-name" +
+                                ((dsIds()[i()] == selectedDsId()) && 
+                                    (updateSelectedIdx(i())) ? 
+                                    " ds-selected" : ""
+                            )}
+                        /* Another hack, this time to scroll to the keyboard hovered item */
+                        style={(keyboardHoverIdx() == i()) ? "box-shadow: inset 0 0 0 1px white;" : ""}    
+                        onclick={(e) => {
+                                setSelectedDsId(dsIds()[i()]);
                                 setDisplayDropdown(false);
                                 setter_lambda(item);
-                                setSelectedStr(display_lambda(item));}}
+                                setSelectedStr(display_lambda(item));
+                                e.stopPropagation();
+                            }}
                         >
                             {display_lambda(item)}
                         </li>

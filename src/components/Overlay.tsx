@@ -9,7 +9,7 @@ export function closeOverlay() {
     console.debug("closing overlay");
     document.getElementById("overlay")?.setAttribute("style", "display:none;");
     document.getElementById("overlay")?.setAttribute("hidden", ""); // Currently uneccessary but seems good practise
-    document.removeEventListener("keyup", overlayEscapeClose) 
+    document.removeEventListener("keydown", overlayEscapeClose) 
     setOverlayContent(<></>);
 }
 
@@ -24,8 +24,8 @@ function showOverlay(label: string, elements: any) {
     console.debug(`showing overlay \"${label}\"`);
     setOverlayContent(elements);
     setLabel(label);
-    document.removeEventListener("keyup", overlayEscapeClose)
-    document.addEventListener("keyup", overlayEscapeClose);
+    document.removeEventListener("keydown", overlayEscapeClose)
+    document.addEventListener("keydown", overlayEscapeClose);
     document.getElementById("overlay")?.setAttribute("style", "display:flex;");
     document.getElementById("overlay")?.removeAttribute("hidden"); // Currently uneccessary but seems good practise
 }
