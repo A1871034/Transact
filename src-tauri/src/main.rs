@@ -45,6 +45,8 @@ fn main() {
             get_bare_entities,
             get_item,
             get_items,
+            // get_bare_items,
+            get_all_packaged_items,
             submit_new_entity,
             submit_new_account,
             submit_new_transaction,

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::DbConnection;
 use rusqlite::Result;
 use tauri::State;
@@ -209,7 +211,7 @@ pub struct AccountFE {
     m_name: String,
     m_entity_id: u64,
     m_entity_name: String,
-    m_added: u64,
+    m_created: u64,
 }
 
 fn db_get_accounts(dbconn: State<DbConnection>) -> Result<Vec<AccountFE>, Box<dyn std::error::Error>> {
@@ -223,7 +225,7 @@ fn db_get_accounts(dbconn: State<DbConnection>) -> Result<Vec<AccountFE>, Box<dy
             m_name: row.get(1)?,
             m_entity_id: row.get(2)?,
             m_entity_name: row.get(3)?,
-            m_added: row.get(4)?,
+            m_created: row.get(4)?,
         })
     })?;
     let accounts: Vec<AccountFE> = raw_accounts.map(|result_account| {
@@ -366,3 +368,56 @@ pub fn get_item(item_id: u64, dbconn: State<DbConnection>) -> Result<DetailedIte
     db_get_item(item_id, dbconn)
     .map_err(|err| err.to_string())
 } 
+
+// Packaged items list endpoint
+
+#[tauri::command]
+pub fn get_all_packaged_items(dbconn: State<DbConnection>) -> Result<Vec<DetailedItemFE>, String> {
+    println!("Get: All packaged items");
+    let res = db_get_all_packaged_items(dbconn);
+    res.map_err(|err| {
+        err.to_string()
+    })
+}
+
+fn db_get_all_packaged_items(dbconn: State<DbConnection>) -> Result<Vec<DetailedItemFE>, Box<dyn std::error::Error>> {
+    let items: Vec<DetailedItemFE>;
+    let mut packagings: HashMap<u64, Vec<PackagedItemFE>> = HashMap::new();
+
+    {
+        let lock = dbconn.conn.lock().unwrap();
+        let mut stmt = lock.prepare_cached(
+            "SELECT p.item_id, p.id, p.qty, p.unit, p.units_per_qty, p.added FROM packaged_item p"
+        )?;
+        let raw_packagings = stmt.query_map([], |row| {
+            Ok((row.get::<usize, u64>(0)?, PackagedItemFE {
+                m_id: row.get(1)?,
+                m_qty: row.get(2)?,
+                m_unit: row.get(3)?,
+                m_units_per_qty: row.get(4)?,
+                m_created: row.get(5)?,
+            }))
+        })?;
+
+        for packaging in raw_packagings {
+            let packaging = packaging?; 
+            packagings.entry(packaging.0).or_default().push(packaging.1);
+        }
+        println!("MAP: {:?}", packagings);
+        stmt = lock.prepare_cached(
+            "SELECT id, name, description, added FROM items")?;
+            let raw_items = stmt.query_map([], |row| { Ok(ItemFE{
+                m_id: row.get(0)?,
+                m_name: row.get(1)?,
+                m_description: row.get(2)?,
+                m_created: row.get(3)?,
+            })})?;
+        items = raw_items.map(|item| {
+            let item = item.unwrap();
+            println!("ITEM: {:?}", item);
+            DetailedItemFE {m_packaged_items: packagings.remove(&item.m_id).unwrap_or(Vec::new()), m_item: item }
+        }).collect();
+    }
+
+    Ok(items)
+}
