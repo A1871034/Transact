@@ -1,6 +1,6 @@
 import '../styles/DropdownSearch.css'
 
-import { Accessor, createComputed, createEffect, createSignal, For, JSX, Show } from 'solid-js';
+import { Setter, createComputed, createEffect, createSignal, For, JSX, Show, Accessor } from 'solid-js';
 
 // TODO: Add support for arbitrary depth recursive dropdowns.
 //  Interface with vec instead of accessor? i.e. "interface A {cur: T[], nxt: A}".
@@ -8,15 +8,20 @@ import { Accessor, createComputed, createEffect, createSignal, For, JSX, Show } 
 
 // TODO: Add function to close the dropdown?.
 
-function DropdownSearchL<T>(
+export interface dropdownEntry {
+    display: string,
+    data: number | dropdownEntry[],
+    hover: string | undefined,
+}
+
+function DropdownSearchL(
     placeholder: string,
-    item_accessor: Accessor<T[] | undefined>,
-    display_lambda: (inp: T) => string,
-    setter_lambda: (inp: T) => void,
+    entries: Accessor<dropdownEntry[] | undefined>,
+    setId: Setter<number>
 ): JSX.Element {
     const [selectedStr, setSelectedStr] = createSignal("None Selected...");
     const [filterBy, setFilterBy] = createSignal("");
-    const [items, setItems] = createSignal<T[]>([]);
+    const [items, setItems] = createSignal<dropdownEntry[]>([]);
     const [displayDropdown, setDisplayDropdown] = createSignal(false);
     
     const [dsIds, setDsIds] = createSignal<number[]>([]);
@@ -28,17 +33,17 @@ function DropdownSearchL<T>(
 
     function filterFunc() {
         let must_include = filterBy().toLowerCase();
-        let tmp_items: T[] = [];
+        let tmp_entries: dropdownEntry[] = [];
         let tmp_ds_ids: number[] = [];
-        if (item_accessor() === undefined) {
+        if (entries() === undefined) {
             return;
         }
         
         // We assume that order of returned items is constant.
         let ds_id = 0;
-        for (const item of item_accessor()!) {
-            if (display_lambda(item).toLowerCase().includes(must_include)) {
-                tmp_items.push(item);
+        for (const entry of entries()!) {
+            if (entry.display.toLowerCase().includes(must_include)) {
+                tmp_entries.push(entry);
                 tmp_ds_ids.push(ds_id);
             }
             ds_id++;
@@ -48,11 +53,11 @@ function DropdownSearchL<T>(
         // Invalidate the known index of any selection before updating the lists.
         setKeyboardHoverIdx(undefined);
         setSelectedDsIdx(undefined);
-        setItems(tmp_items);
+        setItems(tmp_entries);
         setDsIds(tmp_ds_ids);
     }
     
-    createComputed(filterFunc, "");
+    createComputed(filterFunc);
 
     function looseFocus() {
         setKeyboardHoverIdx(undefined);
@@ -141,11 +146,11 @@ function DropdownSearchL<T>(
                 // Select the hovered item.
                 if (keyboardHoverIdx() !== undefined) {
                     setDisplayDropdown(false);
-                    const item: T = items()[keyboardHoverIdx()!];
+                    const item: dropdownEntry = items()[keyboardHoverIdx()!];
                     setSelectedDsId(dsIds()[keyboardHoverIdx()!]);
                     setKeyboardHoverIdx(undefined);
-                    setter_lambda(item);
-                    setSelectedStr(display_lambda(item));
+                    setId(item.data as number);
+                    setSelectedStr(item.display);
                     e.preventDefault();
                     break;
                 }
@@ -153,10 +158,10 @@ function DropdownSearchL<T>(
                 //  Select the only item.
                 if (items().length == 1) {
                     setDisplayDropdown(false);
-                    const item: T = items()[0];
+                    const item: dropdownEntry = items()[0];
                     setSelectedDsId(dsIds()[0]);
-                    setter_lambda(item);
-                    setSelectedStr(display_lambda(item));
+                    setId(item.data as number);
+                    setSelectedStr(item.display);
                     e.preventDefault();
                 }
                 break;
@@ -167,10 +172,10 @@ function DropdownSearchL<T>(
 
                 if (items().length == 1) {
                     //  Select the only item.
-                    const item: T = items()[0];
+                    const item: dropdownEntry = items()[0];
                     setSelectedDsId(dsIds()[0]);
-                    setter_lambda(item);
-                    setSelectedStr(display_lambda(item))
+                    setId(item.data as number);
+                    setSelectedStr(item.display);
                 }
                 break;
             case "ArrowUp":
@@ -278,27 +283,29 @@ function DropdownSearchL<T>(
                                 {no_search_results_text}
                             </li>
                     }>
-                        {(item: T, i) => (
-                        <li ref={elem => {
-                                createEffect(() => {if ((keyboardHoverIdx() == i())) {conditionalScrollToY(elem)}
-                            })}}
-                            class={"ds-item-name" +
-                                ((dsIds()[i()] == selectedDsId()) && 
-                                    (updateSelectedIdx(i())) ? 
-                                    " ds-selected" : ""
-                            )}
-                        /* Another hack, this time to scroll to the keyboard hovered item */
-                        style={(keyboardHoverIdx() == i()) ? "box-shadow: inset 0 0 0 1px white;" : ""}    
-                        onclick={(e) => {
-                                setSelectedDsId(dsIds()[i()]);
-                                setDisplayDropdown(false);
-                                setter_lambda(item);
-                                setSelectedStr(display_lambda(item));
-                                e.stopPropagation();
-                            }}
-                        >
-                            {display_lambda(item)}
-                        </li>
+                        {(item: dropdownEntry, i) => (
+                            <li ref={elem => {
+                                    createEffect(() => {if ((keyboardHoverIdx() == i())) {conditionalScrollToY(elem)}
+                                })}}
+                                class={"ds-item-name" +
+                                    ((dsIds()[i()] == selectedDsId()) && 
+                                        (updateSelectedIdx(i())) ? 
+                                        " ds-selected" : ""
+                                )}
+                                style={(keyboardHoverIdx() == i()) ? "box-shadow: inset 0 0 0 1px white;" : ""}    
+                                onclick={(e) => {
+                                    setSelectedDsId(dsIds()[i()]);
+                                    setDisplayDropdown(false);
+                                    setId(item.data as number);
+                                    setSelectedStr(item.display);
+                                    e.stopPropagation();
+                                }}
+                            >
+                                {item.display}
+                                <Show when={(item.data instanceof Array) && (item.data.length > 0)}>
+                                    <img src="public/icons/caret-down-solid.svg" class="ds-expand-icon" draggable="false"/>
+                                </Show>
+                            </li>
                         )}
                     </For>
                 </ul>

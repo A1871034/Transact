@@ -99,6 +99,7 @@ input.rm-spinner::-webkit-inner-spin-button {
   /* --accent-hightlight-filter: invert(64%) sepia(64%) saturate(4659%) hue-rotate(188deg) brightness(91%) contrast(97%); */
   color: var(--text-color-2);
   background-color: var(--background-color);
+  --filter-accent-color: invert(42%) sepia(93%) saturate(730%) hue-rotate(181deg) brightness(96%) contrast(86%);
 }:focus
 
 #root {

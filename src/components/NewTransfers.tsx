@@ -1,10 +1,10 @@
-import { Accessor, createRoot, createSignal, getOwner, JSX } from 'solid-js';
+import { Accessor, createEffect, createRoot, createSignal, getOwner, JSX, Setter } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
 
-import { BareAccountFE, BareEntityFE, BareItemFE } from '../FrontEndTypes';
+import { BareAccountFE, BareEntityFE, BareItemFE, DetailedItemFE, PackagedItemFE } from '../FrontEndTypes';
 import { date_to_db_time } from "../Utils"
 
-import { DropdownSearchL } from './DropdownSearch';
+import { DropdownSearchL, dropdownEntry } from './DropdownSearch';
 
 function NewCurrencyTransfer(
     transaction_id: number, 
@@ -16,13 +16,19 @@ function NewCurrencyTransfer(
     const [date, setDate] = createSignal<string>();
     const [toAccId, setToAccId] = createSignal<number>();
     const [fromAccId, setFromAccId] = createSignal<number>();
-    const [searchAccounts, setSearchAccounts] = createSignal<BareAccountFE[]>();
+    const [searchAccounts, setSearchAccounts] = createSignal<dropdownEntry[]>();
 
     async function getSearchAccounts() {
         await invoke("get_bare_accounts")
             .then((recv_accounts) => {
                 if (recv_accounts instanceof Array) {
-                    setSearchAccounts(recv_accounts as BareAccountFE[])
+                    setSearchAccounts((recv_accounts as BareAccountFE[]).map(
+                        acc => {return {
+                            display: acc.m_account_name + " | " + acc.m_owning_entity_name,
+                            data: acc.m_account_id, 
+                            hover: undefined
+                        }}
+                    ));
                     console.debug("received bare accounts: ", searchAccounts());           
                 } else {
                     throw "Received accounts are not an array"
@@ -59,27 +65,13 @@ function NewCurrencyTransfer(
             alert("Failed to submit.");
         }
     }
-    
+    Promise<dropdownEntry[]>
     getSearchAccounts();
     const toAccountSearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("To Account...", searchAccounts, 
-            (inp: BareAccountFE) => {
-                return inp.m_account_name + " | " + inp.m_owning_entity_name;
-            },
-            (inp: BareAccountFE) => {
-                setToAccId(inp.m_account_id);
-            }
-        );
+        return DropdownSearchL("To Account...", searchAccounts, setToAccId as Setter<number>);
     }, getOwner());
     const fromAccountSearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("From Account...", searchAccounts as Accessor<BareAccountFE[]>, 
-            (inp: BareAccountFE) => {
-                return inp.m_account_name + " | " + inp.m_owning_entity_name;
-            },
-            (inp: BareAccountFE) => {
-                setFromAccId(inp.m_account_id);
-            }
-        );
+        return DropdownSearchL("From Account...", searchAccounts, setFromAccId as Setter<number>);
     }, getOwner());
 
     return createRoot((): JSX.Element => { return (
@@ -142,28 +134,22 @@ function NewItemTransfer(
     const [date, setDate] = createSignal<string>();
     const [toEntityId, setToEntityId] = createSignal<number>();
     const [fromEntityId, setFromEntityId] = createSignal<number>();
-    const [itemId, setItemId] = createSignal<number>();
-    const [searchEntities, setSearchEntities] = createSignal<BareEntityFE[]>();
-    const [items, setItems] = createSignal<BareItemFE[]>();
+    const [packagedItemId, setPackagedItemId] = createSignal<number>();
 
-    async function getItems() {
-        await invoke("get_bare_items")
-            .then((recv_items) => {
-                if (recv_items instanceof Array) {
-                    setItems(recv_items as BareItemFE[])
-                    console.debug("received bare items: ", items());           
-                } else {
-                    throw "Received items are not an array"
-                }
-            })
-            .catch((error) => console.error(error));
-    };
+    const [searchEntities, setSearchEntities] = createSignal<dropdownEntry[]>();
+    const [allItemPackagings, setAllItemPackagings] = createSignal<dropdownEntry[]>();
 
-    async function getSerachEntities() {
+    async function getSearchEntities() {
         await invoke("get_bare_entities")
             .then((recv_entities) => {
                 if (recv_entities instanceof Array) {
-                    setSearchEntities(recv_entities as BareEntityFE[])
+                    setSearchEntities((recv_entities as BareEntityFE[]).map<dropdownEntry>(
+                        (entity) => {return {
+                            display: entity.m_name,
+                            data: entity.m_id,
+                            hover: undefined,
+                        }}
+                    ));
                     console.debug("received bare entities: ", searchEntities());           
                 } else {
                     throw "Received entities are not an array"
@@ -172,8 +158,29 @@ function NewItemTransfer(
             .catch((error) => console.error(error));
     };
 
+    async function getAllItemPackagings() {
+        await invoke("get_all_packaged_items")
+            .then((recv) => {
+                if (recv instanceof Array) {
+                    setAllItemPackagings((recv as DetailedItemFE[]).map<dropdownEntry>((inp) => {return {
+                        display: inp.m_item.m_name,
+                        data: inp.m_packaged_items.map<dropdownEntry>((packed: PackagedItemFE) => {return {
+                            display: `${packed.m_qty} - ${packed.m_units_per_qty}${packed.m_unit}`,
+                            data: packed.m_id,
+                            hover: undefined,
+                        }}),
+                        hover: `${inp.m_packaged_items.length} packagings`,
+                    }}))
+                    console.debug("received all item packagings: ", allItemPackagings());           
+                } else {
+                    throw "Received data is not an array"
+                }
+            })
+            .catch((error) => console.error(error));
+    };
+
     async function submit() {
-        if (itemId() === undefined) {
+        if (packagedItemId() === undefined) {
             alert("Please select an item");
             return;
         }
@@ -211,37 +218,16 @@ function NewItemTransfer(
         }
     }
     
-    getSerachEntities();
-    getItems();
+    getAllItemPackagings();
+    getSearchEntities();
     const toEntitySearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("To Account...", searchEntities, 
-            (inp: BareEntityFE) => {
-                return inp.m_name;
-            },
-            (inp: BareEntityFE) => {
-                setToEntityId(inp.m_id);
-            }
-        );
+        return DropdownSearchL("To Account...", searchEntities, setToEntityId as Setter<number>);
     }, getOwner());
     const fromEntitySearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("From Account...", searchEntities as Accessor<BareEntityFE[]>, 
-            (inp: BareEntityFE) => {
-                return inp.m_name;
-            },
-            (inp: BareEntityFE) => {
-                setToEntityId(inp.m_id);
-            }
-        );
+        return DropdownSearchL("From Account...", searchEntities, setFromEntityId as Setter<number>);
     }, getOwner());
     const itemSearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("Item...", items, 
-            (inp: BareItemFE) => {
-                return inp.m_name;
-            },
-            (inp: BareItemFE) => {
-                setItemId(inp.m_id);
-            }
-        );
+        return DropdownSearchL("Item...", allItemPackagings, setPackagedItemId as Setter<number>);
     }, getOwner());
 
     return createRoot((): JSX.Element => { return (
@@ -255,7 +241,7 @@ function NewItemTransfer(
                 type="number"
                 step="0.000000001"
                 onChange={(e) => setAmount(Number(e.currentTarget.value))}
-                placeholder={`${((items() === undefined) || (itemId() == undefined)) ? "Qty of item..." : items()![itemId()!].m_unit}`}
+                placeholder={`${((allItemPackagings() === undefined) || (packagedItemId() == undefined)) ? "Qty of item..." : "" /*allItemPackagings()![itemId()!].m_item.*/}`}
                 // disabled={((items() === undefined) || (itemId() == undefined)) ? true : false}
                 class="rm-spinner"
                 required
