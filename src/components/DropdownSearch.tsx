@@ -29,6 +29,7 @@ function DropdownSearchL(
     const [selectedDsIdx, setSelectedDsIdx] = createSignal<number | undefined>();
     const [keyboardHoverIdx, setKeyboardHoverIdx] = createSignal<number | undefined>();
 
+
     const no_search_results_text = "Nothing to Display";
 
     function filterFunc() {
@@ -49,6 +50,8 @@ function DropdownSearchL(
             ds_id++;
         }
         
+        console.debug(`Filtering to: ${JSON.stringify(tmp_entries, undefined, "")}`);
+
         // This section effectively acts as an "on resulting list changed callback"
         // Invalidate the known index of any selection before updating the lists.
         setKeyboardHoverIdx(undefined);
@@ -66,7 +69,7 @@ function DropdownSearchL(
         console.debug(hovered);
         if (hovered.length === 0)
             return;
-        if (!hovered[hovered.length - 1].classList.contains("ds-item-name"))
+        if (!(hovered[hovered.length - 1].classList.contains("ds-item-name") || hovered[hovered.length - 1].classList.contains("ds-expand-icon")))
             setDisplayDropdown(false);
         else if (hovered[hovered.length - 1].innerHTML == no_search_results_text) {
             // More effort than it is worth to keep focus on the input (required to prevent ui bugs).
@@ -250,6 +253,67 @@ function DropdownSearchL(
         }
     }
 
+    const [selectedIdxs, setSelectedIdxs] = createSignal<number[]>([]);
+
+    function selectIdx(i:number, depth:number) {
+        if (depth > selectedIdxs().length) {
+            console.error("Attempted to select Idx at sub_level > (current_deepest_level + 1)");
+            return;
+        }
+        if (depth == selectedIdxs().length) {
+            setSelectedIdxs(selectedIdxs().concat(i));
+            return;
+        }
+        setSelectedIdxs(selectedIdxs().splice(0, depth).concat(i));
+    }
+
+    function getSublevels(items: dropdownEntry[], depth: number, prefix: string) {
+        return <ul class="ds-sublevel dropdown"
+            style="opacity: 0;"
+            ref={selfElem => {setTimeout(() => {
+                const parent_rect = selfElem!.parentElement!.getBoundingClientRect();
+                const origin_list_rect = selfElem.parentElement!.children[1]!.getBoundingClientRect(); // TODO: Come here when it breaks.
+                selfElem.style.left = `${parent_rect.width + origin_list_rect.width}px`;
+                selfElem.style.opacity = "";
+            },0);}
+        }>
+            <For each={Object.values(items)}
+                fallback={
+                    <li class="ds-item-name ds-nothing-to-display">
+                        {no_search_results_text}
+                    </li>
+            }>
+                {(item: dropdownEntry, i) => (
+                    <li ref={elem => {
+                            createEffect(() => {if ((keyboardHoverIdx() == i())) {conditionalScrollToY(elem)}
+                        })}}
+                        class={"ds-item-name" +
+                            ((i() == selectedIdxs()[depth]) ? " ds-selected" : "")}
+                        style={((keyboardHoverIdx() == i()) ? "box-shadow: inset 0 0 0 1px white;" : "") + 
+                            (((item.data instanceof Array) && (item.data.length == 0)) ? "color: var(--red-color);" : "")}     
+                        onclick={(e) => {
+                            if (!(item.data instanceof Array)) {
+                                setSelectedStr(prefix + item.display);
+                                setId(item.data as number);
+                                setDisplayDropdown(false);
+                            }
+                            selectIdx(i(), depth);
+                            e.stopPropagation();
+                        }}
+                    >
+                        {item.display}
+                        <Show when={(item.data instanceof Array) && (item.data.length > 0)}>
+                            <img src="public/icons/caret-down-solid.svg" class="ds-expand-icon" draggable="false"/>
+                        </Show>
+                    </li>
+                )}
+            </For>
+            <Show when={selectedIdxs().length > depth}>
+                {getSublevels(items[depth].data as dropdownEntry[], depth + 1, prefix + items[depth].display + " | ")}
+            </Show>
+        </ul>
+    }
+
     return (<>
         <div class="dropdown-search"
             onkeydown={dsKeyboardControls}>
@@ -292,12 +356,18 @@ function DropdownSearchL(
                                         (updateSelectedIdx(i())) ? 
                                         " ds-selected" : ""
                                 )}
-                                style={(keyboardHoverIdx() == i()) ? "box-shadow: inset 0 0 0 1px white;" : ""}    
+                                style={((keyboardHoverIdx() == i()) ? "box-shadow: inset 0 0 0 1px white;" : "") + 
+                                        (((item.data instanceof Array) && (item.data.length == 0)) ? "color: var(--red-color);" : "")
+                                }    
                                 onclick={(e) => {
                                     setSelectedDsId(dsIds()[i()]);
-                                    setDisplayDropdown(false);
-                                    setId(item.data as number);
-                                    setSelectedStr(item.display);
+                                    if (!(item.data instanceof Array)) {
+                                        setId(item.data as number);
+                                        setSelectedStr(item.display);
+                                        setDisplayDropdown(false);
+                                    } else {
+                                        setSelectedIdxs([]);
+                                    }
                                     e.stopPropagation();
                                 }}
                             >
@@ -309,6 +379,9 @@ function DropdownSearchL(
                         )}
                     </For>
                 </ul>
+                <Show when={selectedDsIdx() != undefined}>
+                    {getSublevels(items()[selectedDsIdx() as number].data as dropdownEntry[], 0, items()[selectedDsIdx() as number].display + " | ")}
+                </Show>
             </Show>
         </div>
     </>)

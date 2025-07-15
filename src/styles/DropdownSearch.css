@@ -22,11 +22,6 @@ input.ds-search {
     max-width: 11em;
 }
 
-.ds-nothing-to-display {
-    background-color: var(--tertiary-color);
-    color: var(--text-color-1);
-    cursor: default;
-}
 
 ul.dropdown {
     position: absolute;
@@ -44,6 +39,10 @@ ul.dropdown {
     z-index: 2;
 }
 
+ul.ds-sublevel {
+    left: 0;
+}
+
 ul.dropdown li {
     list-style: none;
     padding-left: 0.5em;
@@ -52,10 +51,12 @@ ul.dropdown li {
 
 ul.dropdown li:first-child {
     padding-top: 0.25em;
+    border-radius: 0.5em 0.5em 0 0;
 }
 
 ul.dropdown li:last-child {
     padding-bottom: 0.05em;
+    border-radius: 0 0 0.5em 0.5em;
 }
 
 ul.dropdown li.ds-item-name:hover {
@@ -82,4 +83,10 @@ img.ds-expand-icon {
     vertical-align: middle;
     filter: var(--filter-text-color-1);
     float: right;
+}
+
+li.ds-nothing-to-display {
+    background-color: var(--tertiary-color);
+    color: var(--text-color-1);
+    cursor: default;
 }
