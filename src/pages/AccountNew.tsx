@@ -1,9 +1,9 @@
-import { createRoot, createSignal, getOwner, JSX } from "solid-js";
+import { createEffect, createRoot, createSignal, getOwner, JSX, Setter } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 
 import { showOverlay, closeOverlay } from "../components/Overlay";
 import { get_time_as_if_database } from "../Utils";
-import { DropdownSearchL } from "../components/DropdownSearch";
+import { dropdownEntry, DropdownSearchL } from "../components/DropdownSearch";
 import { AccountFE, BareEntityFE } from "../FrontEndTypes";
 
 import { accounts, setAccounts } from "./Accounts";
@@ -12,11 +12,15 @@ export function showNewAccountOverlay() {
     const [name, setName] = createSignal("");
     const [newAccEntityId, setNewAccEntityId] = createSignal(-1);
     const [chosenEntityName, setChosenEntityName] = createSignal("");
-    const [accSearchEntities, setAccSearchEntities] = createSignal([] as Array<BareEntityFE>);
+    const [accSearchEntities, setAccSearchEntities] = createSignal([] as dropdownEntry[]);
 
     async function getAccSearchEntities() {
         await invoke("get_bare_entities")
-            .then((bare_entities) => {setAccSearchEntities(bare_entities as Array<BareEntityFE>)})
+            .then((bare_entities) => {setAccSearchEntities((bare_entities as Array<BareEntityFE>).map<dropdownEntry>(ent => {return {
+                    data: ent.m_id,
+                    display: ent.m_name,
+                    hover: undefined,
+                }}))})
             .catch();
     }
     getAccSearchEntities();
@@ -45,9 +49,8 @@ export function showNewAccountOverlay() {
     }
 
     const entityDropdownSearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("Entity...", accSearchEntities, 
-                (inp: BareEntityFE) => {return inp.m_name}, 
-                (inp: BareEntityFE) => {setNewAccEntityId(inp.m_id); setChosenEntityName(inp.m_name); });
+                createEffect(() => {setChosenEntityName(accSearchEntities().find(ent => {return ((ent.data == newAccEntityId()) ? true : false)})?.display!)})
+                return DropdownSearchL("Entity...", accSearchEntities, setNewAccEntityId as Setter<number>);
     }, getOwner());
     
     const AccountNew = (

@@ -405,7 +405,7 @@ fn db_get_all_packaged_items(dbconn: State<DbConnection>) -> Result<Vec<Detailed
         }
         println!("MAP: {:?}", packagings);
         stmt = lock.prepare_cached(
-            "SELECT id, name, description, added FROM items")?;
+            "SELECT id, name, description, added FROM items ORDER BY name ASC")?;
             let raw_items = stmt.query_map([], |row| { Ok(ItemFE{
                 m_id: row.get(0)?,
                 m_name: row.get(1)?,

@@ -256,15 +256,19 @@ function DropdownSearchL(
     const [selectedIdxs, setSelectedIdxs] = createSignal<number[]>([]);
 
     function selectIdx(i:number, depth:number) {
+        console.debug(`SelectIDX: i=${i} depth=${depth}`);
+        console.debug(`0Selected IDXs ${JSON.stringify(selectedIdxs())}`);
         if (depth > selectedIdxs().length) {
             console.error("Attempted to select Idx at sub_level > (current_deepest_level + 1)");
             return;
         }
         if (depth == selectedIdxs().length) {
             setSelectedIdxs(selectedIdxs().concat(i));
+            console.debug(`1Selected IDXs ${JSON.stringify(selectedIdxs())}`);
             return;
         }
         setSelectedIdxs(selectedIdxs().splice(0, depth).concat(i));
+        console.debug(`2Selected IDXs ${JSON.stringify(selectedIdxs())}`);
     }
 
     function getSublevels(items: dropdownEntry[], depth: number, prefix: string) {
@@ -275,7 +279,7 @@ function DropdownSearchL(
                 const origin_list_rect = selfElem.parentElement!.children[1]!.getBoundingClientRect(); // TODO: Come here when it breaks.
                 selfElem.style.left = `${parent_rect.width + origin_list_rect.width}px`;
                 selfElem.style.opacity = "";
-            },0);}
+            },100);}
         }>
             <For each={Object.values(items)}
                 fallback={
@@ -308,8 +312,8 @@ function DropdownSearchL(
                     </li>
                 )}
             </For>
-            <Show when={selectedIdxs().length > depth}>
-                {getSublevels(items[depth].data as dropdownEntry[], depth + 1, prefix + items[depth].display + " | ")}
+            <Show when={(selectedIdxs().length > depth) && (items[selectedIdxs()[depth]].data instanceof Array)}>
+                {getSublevels(items[selectedIdxs()[depth]].data as dropdownEntry[], depth + 1, prefix + items[selectedIdxs()[depth]].display + " | ")}
             </Show>
         </ul>
     }
@@ -360,7 +364,6 @@ function DropdownSearchL(
                                         (((item.data instanceof Array) && (item.data.length == 0)) ? "color: var(--red-color);" : "")
                                 }    
                                 onclick={(e) => {
-                                    setSelectedDsId(dsIds()[i()]);
                                     if (!(item.data instanceof Array)) {
                                         setId(item.data as number);
                                         setSelectedStr(item.display);
@@ -368,6 +371,7 @@ function DropdownSearchL(
                                     } else {
                                         setSelectedIdxs([]);
                                     }
+                                    setSelectedDsId(dsIds()[i()]);
                                     e.stopPropagation();
                                 }}
                             >
@@ -379,7 +383,7 @@ function DropdownSearchL(
                         )}
                     </For>
                 </ul>
-                <Show when={selectedDsIdx() != undefined}>
+                <Show when={(selectedDsIdx() != undefined) && (items()[selectedDsIdx() as number].data instanceof Array)}>
                     {getSublevels(items()[selectedDsIdx() as number].data as dropdownEntry[], 0, items()[selectedDsIdx() as number].display + " | ")}
                 </Show>
             </Show>

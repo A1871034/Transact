@@ -221,10 +221,10 @@ function NewItemTransfer(
     getAllItemPackagings();
     getSearchEntities();
     const toEntitySearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("To Account...", searchEntities, setToEntityId as Setter<number>);
+        return DropdownSearchL("To Entity...", searchEntities, setToEntityId as Setter<number>);
     }, getOwner());
     const fromEntitySearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("From Account...", searchEntities, setFromEntityId as Setter<number>);
+        return DropdownSearchL("From Entity...", searchEntities, setFromEntityId as Setter<number>);
     }, getOwner());
     const itemSearch = createRoot((): JSX.Element => {
         return DropdownSearchL("Item...", allItemPackagings, setPackagedItemId as Setter<number>);
