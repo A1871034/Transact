@@ -39,6 +39,16 @@ ul.dropdown {
     z-index: 2;
 }
 
+ul.ds-keyboard-mode {
+    border-color: var(--text-color-1);
+}
+
+div.ds-all-dropdowns {
+    top: 0;
+    left: 100%;
+    position: absolute;
+}
+
 ul.ds-sublevel {
     left: 0;
 }
