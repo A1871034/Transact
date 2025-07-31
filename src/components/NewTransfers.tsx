@@ -25,8 +25,9 @@ function NewCurrencyTransfer(
                     setSearchAccounts((recv_accounts as BareAccountFE[]).map(
                         acc => {return {
                             display: acc.m_account_name + " | " + acc.m_owning_entity_name,
-                            data: acc.m_account_id, 
-                            hover: undefined
+                            data: undefined,
+                            data_onset: acc.m_account_id,
+                            hover: undefined,
                         }}
                     ));
                     console.debug("received bare accounts: ", searchAccounts());           
@@ -68,10 +69,10 @@ function NewCurrencyTransfer(
     Promise<dropdownEntry[]>
     getSearchAccounts();
     const toAccountSearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("To Account...", searchAccounts, setToAccId as Setter<number>);
+        return DropdownSearchL("To Account...", searchAccounts, (de: dropdownEntry) => setToAccId(de.data_onset));
     }, getOwner());
     const fromAccountSearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("From Account...", searchAccounts, setFromAccId as Setter<number>);
+        return DropdownSearchL("From Account...", searchAccounts, (de: dropdownEntry) => setFromAccId(de.data_onset));
     }, getOwner());
 
     return createRoot((): JSX.Element => { return (
@@ -135,6 +136,7 @@ function NewItemTransfer(
     const [toEntityId, setToEntityId] = createSignal<number>();
     const [fromEntityId, setFromEntityId] = createSignal<number>();
     const [packagedItemId, setPackagedItemId] = createSignal<number>();
+    const [selectedUnit, setSelectedUnit] = createSignal("");
 
     const [searchEntities, setSearchEntities] = createSignal<dropdownEntry[]>();
     const [allItemPackagings, setAllItemPackagings] = createSignal<dropdownEntry[]>();
@@ -146,7 +148,8 @@ function NewItemTransfer(
                     setSearchEntities((recv_entities as BareEntityFE[]).map<dropdownEntry>(
                         (entity) => {return {
                             display: entity.m_name,
-                            data: entity.m_id,
+                            data: undefined,
+                            data_onset: entity.m_id,
                             hover: undefined,
                         }}
                     ));
@@ -166,9 +169,11 @@ function NewItemTransfer(
                         display: inp.m_item.m_name,
                         data: inp.m_packaged_items.map<dropdownEntry>((packed: PackagedItemFE) => {return {
                             display: `${packed.m_qty} - ${packed.m_units_per_qty}${packed.m_unit}`,
-                            data: packed.m_id,
+                            data: undefined,
+                            data_onset: {id: packed.m_id, unit: packed.m_unit},
                             hover: undefined,
                         }}),
+                        data_onset: undefined,
                         hover: `${inp.m_packaged_items.length} packagings`,
                     }}))
                     console.debug("received all item packagings: ", allItemPackagings());           
@@ -221,13 +226,13 @@ function NewItemTransfer(
     getAllItemPackagings();
     getSearchEntities();
     const toEntitySearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("To Entity...", searchEntities, setToEntityId as Setter<number>);
+        return DropdownSearchL("To Entity...", searchEntities, (de: dropdownEntry) => setToEntityId(de.data_onset));
     }, getOwner());
     const fromEntitySearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("From Entity...", searchEntities, setFromEntityId as Setter<number>);
+        return DropdownSearchL("From Entity...", searchEntities, (de: dropdownEntry) => setFromEntityId(de.data_onset));
     }, getOwner());
     const itemSearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("Item...", allItemPackagings, setPackagedItemId as Setter<number>);
+        return DropdownSearchL("Item...", allItemPackagings, (de: dropdownEntry) => {setPackagedItemId(de.data_onset.id); setSelectedUnit(de.data_onset.unit)});
     }, getOwner());
 
     return createRoot((): JSX.Element => { return (
@@ -241,7 +246,7 @@ function NewItemTransfer(
                 type="number"
                 step="0.000000001"
                 onChange={(e) => setAmount(Number(e.currentTarget.value))}
-                placeholder={`${((allItemPackagings() === undefined) || (packagedItemId() == undefined)) ? "Qty of item..." : "" /*allItemPackagings()![itemId()!].m_item.*/}`}
+                placeholder={`${((allItemPackagings() === undefined) || (packagedItemId() == undefined)) ? "Qty of item..." : selectedUnit() /*allItemPackagings()![itemId()!].m_item.*/}`}
                 // disabled={((items() === undefined) || (itemId() == undefined)) ? true : false}
                 class="rm-spinner"
                 required

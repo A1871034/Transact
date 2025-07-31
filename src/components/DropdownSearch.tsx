@@ -1,6 +1,6 @@
 import '../styles/DropdownSearch.css'
 
-import { Setter, createComputed, createEffect, createSignal, For, JSX, Show, Accessor } from 'solid-js';
+import { createComputed, createEffect, createSignal, For, JSX, Show, Accessor } from 'solid-js';
 
 // TODO: Add support for arbitrary depth recursive dropdowns.
 //  Interface with vec instead of accessor? i.e. "interface A {cur: T[], nxt: A}".
@@ -10,16 +10,18 @@ import { Setter, createComputed, createEffect, createSignal, For, JSX, Show, Acc
 
 export interface dropdownEntry {
     display: string,
-    data: number | dropdownEntry[],
+    data: dropdownEntry[] | undefined,
+    data_onset: any,
     hover: string | undefined,
 }
 
 function DropdownSearchL(
     placeholder: string,
     entries: Accessor<dropdownEntry[] | undefined>,
-    setId: Setter<number>
+    set_lambda: Function,
 ): JSX.Element {
     const [selectedStr, setSelectedStr] = createSignal("None Selected...");
+    const [prevFilterBy, setPrevFilterBy] = createSignal<string | undefined>(undefined);
     const [filterBy, setFilterBy] = createSignal("");
     const [items, setItems] = createSignal<dropdownEntry[]>([]);
     const [displayDropdown, setDisplayDropdown] = createSignal(false);
@@ -37,12 +39,11 @@ function DropdownSearchL(
     let allDropdowns: HTMLDivElement | undefined;
 
     function filterFunc() {
+        if (entries() === undefined) {return}
+        
         let must_include = filterBy().toLowerCase();
         let tmp_entries: dropdownEntry[] = [];
         let tmp_ds_ids: number[] = [];
-        if (entries() === undefined) {
-            return;
-        }
 
         // We assume that order of returned items is constant.
         let selected_in_filter = false;
@@ -58,6 +59,8 @@ function DropdownSearchL(
             }
             ds_id++;
         }
+
+        console.log("FILTER")
 
         // console.debug(`Filtering to: ${JSON.stringify(tmp_entries, undefined, "")}`);
         // console.debug(`Selected in filtered = ${selected_in_filter}`);
@@ -154,7 +157,7 @@ function DropdownSearchL(
             case "Enter": // TODO: UPDATE
                 e.preventDefault();
                 stop_bubble = true;
-                
+
                 // Open the dropdown if there is none.
                 if (!displayDropdown()) {
                     openDropdown();
@@ -166,6 +169,60 @@ function DropdownSearchL(
                     setKeyboardMode(true);
                     break;
                 }
+
+                if (allDropdowns === undefined) {break}
+
+                {
+                    let item: dropdownEntry | dropdownEntry[] = items();
+
+                    // Check for selecting an item in the dropdown.
+                    if ((allDropdowns!.childElementCount > 1) && (selectedIdxs().length > 0)) {
+                        item = item[dsIds()[selectedIdxs()[0]]];
+                        var prefix = "";
+                        for (let i = 1; i < (allDropdowns!.childElementCount - 1); i++) {
+                            if (!(item.data instanceof Array)) {break}
+                            prefix += `${item.display} | `;
+                            item = item.data[selectedIdxs()[i]];
+                        }
+                        if (!(item.data instanceof Array)) {break}
+                        prefix += `${item.display} | `;
+                        if (keyboardHoverIdx() === undefined) {
+                            if (item.data.length === 1) {
+                                item = item.data[0];
+                            } else {
+                                break;
+                            }
+                        } else {
+                            item = item.data[keyboardHoverIdx()!];
+                        }
+                    } else {
+                        if (keyboardHoverIdx() === undefined) {
+                            if (items().length === 1) {
+                                item = items()[0];
+                            } else {
+                                break;
+                            }
+                        } else {
+                            item = items()[keyboardHoverIdx()!]
+                        }
+                        var prefix = "";
+                    }
+
+                    if (!(item.data instanceof Array)) {
+                        setSelectedStr(prefix + item.display);
+                        set_lambda(item);
+                    }
+                }
+
+                let sel_idx = 0;
+                if (keyboardHoverIdx() !== undefined) {
+                    sel_idx = keyboardHoverIdx()!;
+                }
+                selectIdx((allDropdowns!.childElementCount == 1) ? dsIds()[sel_idx] : sel_idx, allDropdowns!.childElementCount - 1);
+                setDisplaySelected(true);
+                e.stopPropagation();
+                e.preventDefault();
+
                 break;
             case "Tab":
                 if (!displayDropdown()) { break }
@@ -225,34 +282,52 @@ function DropdownSearchL(
                     break;
                 }
             case "ArrowLeft":
-                if (!keyboardMode()) {break}
-                selectedIdxs().pop();
-                setSelectedIdxs([...selectedIdxs()])
+                if (!keyboardMode() || (allDropdowns === undefined)) {break}
                 stop_bubble = true;
                 e.preventDefault();
+
+                if (selectedIdxs().length == 0) {
+                    setKeyboardHoverIdx(undefined);
+                    break;
+                }
+
+                let num_starting = allDropdowns!.childElementCount;
+                let prev_idx = selectedIdxs().pop();
+                if ((selectedIdxs().length > 0) && (allDropdowns!.childElementCount == num_starting)) {
+                    prev_idx = selectedIdxs().pop();
+                }
+                else if (selectedIdxs().length == 0) {
+                    prev_idx = dsIds()[prev_idx!];
+                }
+                setSelectedIdxs([...selectedIdxs()]);
+                setKeyboardHoverIdx(prev_idx);
                 break
             case "ArrowRight":
                 if (!keyboardMode() || (keyboardHoverIdx() === undefined) || (allDropdowns === undefined)) {break}
 
-                if ((allDropdowns!.childElementCount > 1) && (selectedIdxs().length > 0)) {
-                    var item = items()[dsIds()[selectedIdxs()[0]]];
-                    var prefix = "";
-                    for (let i = 1; i < (allDropdowns!.childElementCount - 1); i++) {
+                {
+                    let item: dropdownEntry | dropdownEntry[] = items();
+
+                    if ((allDropdowns!.childElementCount > 1) && (selectedIdxs().length > 0)) {
+                        item = item[dsIds()[selectedIdxs()[0]]];
+                        var prefix = "";
+                        for (let i = 1; i < (allDropdowns!.childElementCount - 1); i++) {
+                            if (!(item.data instanceof Array)) {break}
+                            prefix += `${item.display} | `;
+                            item = item.data[selectedIdxs()[i]];
+                        }
                         if (!(item.data instanceof Array)) {break}
                         prefix += `${item.display} | `;
-                        item = item.data[selectedIdxs()[i]];
+                        item = item.data[keyboardHoverIdx()!];
+                    } else {
+                        item = item[keyboardHoverIdx()!]
+                        var prefix = "";
                     }
-                    if (!(item.data instanceof Array)) {break}
-                    prefix += `${item.display} | `;
-                    item = item.data[keyboardHoverIdx()!];
-                } else {
-                    var item = items()[keyboardHoverIdx()!]
-                    var prefix = "";
-                }
 
-                if (!(item.data instanceof Array)) {
-                    setSelectedStr(prefix + item.display);
-                    setId(item.data as number);
+                    if (!(item.data instanceof Array)) {
+                        setSelectedStr(prefix + item.display);
+                        set_lambda(item);
+                    }
                 }
                 selectIdx((allDropdowns!.childElementCount == 1) ? dsIds()[keyboardHoverIdx()!] : keyboardHoverIdx()!, allDropdowns!.childElementCount - 1);
                 setDisplaySelected(true);
@@ -332,18 +407,18 @@ function DropdownSearchL(
                     {(item: dropdownEntry, i) => (
                         <li ref={elem => {
                             createEffect(() => {
-                                if ((keyboardHoverIdx() == i()) && !is_deeper_menu) { conditionalScrollToY(elem) }
+                                if (!is_deeper_menu && (keyboardHoverIdx() == i())) { conditionalScrollToY(elem) }
                             })
                         }}
                             class={"ds-item-name" +
                                 ((displaySelected() && (i() == selected_idx_at_depth)) ? " ds-selected" : "")}
-                            style={(((keyboardHoverIdx() == i()) && !is_deeper_menu) ? "box-shadow: inset 0 0 0 1px white;" : "") +
+                            style={((!is_deeper_menu && (keyboardHoverIdx() == i())) ? "box-shadow: inset 0 0 0 1px white;" : "") +
                                 (((item.data instanceof Array) && (item.data.length == 0)) ? "color: var(--red-color);" : "")}
                             onpointerdown={e => e.preventDefault()}
                             onclick={(e) => {
                                 if (!(item.data instanceof Array)) {
                                     setSelectedStr(prefix + item.display);
-                                    setId(item.data as number);
+                                    set_lambda(item);
                                     setDisplayDropdown(false);
                                     setKeyboardMode(false);
                                 }

@@ -17,10 +17,11 @@ export function showNewAccountOverlay() {
     async function getAccSearchEntities() {
         await invoke("get_bare_entities")
             .then((bare_entities) => {setAccSearchEntities((bare_entities as Array<BareEntityFE>).map<dropdownEntry>(ent => {return {
-                    data: ent.m_id,
-                    display: ent.m_name,
-                    hover: undefined,
-                }}))})
+                display: ent.m_name,
+                data: undefined,
+                data_onset: ent.m_id,
+                hover: undefined,
+            }}))})
             .catch();
     }
     getAccSearchEntities();
@@ -49,8 +50,7 @@ export function showNewAccountOverlay() {
     }
 
     const entityDropdownSearch = createRoot((): JSX.Element => {
-                createEffect(() => {setChosenEntityName(accSearchEntities().find(ent => {return ((ent.data == newAccEntityId()) ? true : false)})?.display!)})
-                return DropdownSearchL("Entity...", accSearchEntities, setNewAccEntityId as Setter<number>);
+                return DropdownSearchL("Entity...", accSearchEntities, (de: dropdownEntry) => {setNewAccEntityId(de.data_onset); setChosenEntityName(de.display)});
     }, getOwner());
     
     const AccountNew = (

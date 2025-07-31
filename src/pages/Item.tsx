@@ -228,15 +228,6 @@ export function showItemOverlay(item_id: number) {
                                             />
                                         </div>
                                         <div>
-                                            <label for="unit">Unit:</label><br/>
-                                            <input
-                                                id="unit"
-                                                onChange={(e) => setUnit(e.currentTarget.value)}
-                                                placeholder="Enter unit..."
-                                                required
-                                                />
-                                        </div>
-                                        <div>
                                             <label for="units-per-qty">Units/Qty:</label><br/>
                                             <input
                                                 id="units-per-qty"
@@ -245,6 +236,15 @@ export function showItemOverlay(item_id: number) {
                                                 step="0.001"
                                                 onChange={(e) => setUnitsPerQty(Number(e.currentTarget.value))}
                                                 placeholder="Enter Units/Qty..."
+                                                required
+                                                />
+                                        </div>
+                                        <div>
+                                            <label for="unit">Unit:</label><br/>
+                                            <input
+                                                id="unit"
+                                                onChange={(e) => setUnit(e.currentTarget.value)}
+                                                placeholder="Enter unit..."
                                                 required
                                                 />
                                         </div>
