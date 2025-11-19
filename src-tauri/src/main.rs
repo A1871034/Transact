@@ -52,6 +52,7 @@ fn main() {
             submit_new_transaction,
             update_transaction_details,
             submit_new_currency_transfer,
+            submit_new_item_transfer,
             submit_delete_account,
             submit_delete_entity,
             submit_new_item,

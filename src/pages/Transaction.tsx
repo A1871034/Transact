@@ -149,7 +149,7 @@ export function showTransactionOverlay(transaction_id: number) {
                     <div class="tile-container">
                         <div class="tile ta-c hide-overflow">
                             <div id="transaction-transfers">
-                                <table class="dashboard-item">
+                                <table class="dashboard-item" style="margin-bottom: 1em;">
                                     <colgroup>
                                         <col span="1" style="width: 30%;" />
                                         <col span="1" style="width: 70%;" />
@@ -238,12 +238,12 @@ export function showTransactionOverlay(transaction_id: number) {
                             <div id="transaction-transfers">
                                 <table class="dashboard-item interactive">
                                     <colgroup>
-                                        <col span="1" style="width: 10%;" />
-                                        <col span="1" style="width: 20%;" />
-                                        <col span="1" style="width: 10%;" />
-                                        <col span="1" style="width: 20%;" />
-                                        <col span="1" style="width: 20%;" />
-                                        <col span="1" style="width: 20%;" />
+                                        <col span="1" style="max-width: 10%;" />
+                                        <col span="1" style="max-width: 20%;" />
+                                        <col span="1" style="max-width: 10%;" />
+                                        <col span="1" style="max-width: 20%;" />
+                                        <col span="1" style="max-width: 20%;" />
+                                        <col span="1" style="max-width: 20%;" />
                                     </colgroup>
                                     <thead>
                                         <tr class="bg-p">
@@ -309,11 +309,11 @@ export function showTransactionOverlay(transaction_id: number) {
                             </div>
                         </div>
                         <Show when={showNewTf()}>
-                            <div style="flex-basis: 100%;" class="tile">
+                            <div class="tile">
                                 <div class="tile-header">
                                     <h2>Add New Transfer</h2>
                                 </div>
-                                <div id="new-tx-content" class="tile-contents">
+                                <div class="tile-contents flex-row">
                                     <nav id="transfer-type-select">
                                         <For each={Object.values(transfer_types_selection)}>
                                             {(tx_type) => (

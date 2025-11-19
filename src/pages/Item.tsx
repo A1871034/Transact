@@ -89,7 +89,7 @@ export function showItemOverlay(item_id: number) {
                     <div class="tile-container">
                         <div class="tile ta-c hide-overflow">
                             <div id="transaction-transfers">
-                                <table class="dashboard-item">
+                                <table class="dashboard-item" style="margin-bottom: 1em;">
                                     <colgroup>
                                         <col span="1" style="width: 30%;" />
                                         <col span="1" style="width: 70%;" />
@@ -211,45 +211,47 @@ export function showItemOverlay(item_id: number) {
                             </div>
                         </div>
                         <Show when={showNewPackage()}>
-                            <div style="flex-basis: 100%;" class="tile">
+                            <div class="tile">
                                 <div class="tile-header">
                                     <h2>Add New Packaging</h2>
                                 </div>
-                                <div id="new-tx-content" class="tile-contents">
-                                    <form onSubmit={(e) => { e.preventDefault(); submitNewPackaging(); }}>
-                                        <div>
-                                            <label for="qty">Qty:</label><br/>
-                                            <input
-                                                id="qty"
-                                                type="number"
-                                                onChange={(e) => setQty(Number(e.currentTarget.value))}
-                                                placeholder="Enter quantity..."
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label for="units-per-qty">Units/Qty:</label><br/>
-                                            <input
-                                                id="units-per-qty"
-                                                type="number"
-                                                min="0.001"
-                                                step="0.001"
-                                                onChange={(e) => setUnitsPerQty(Number(e.currentTarget.value))}
-                                                placeholder="Enter Units/Qty..."
-                                                required
+                                <div class="tile-contents flex-row">
+                                    <div style="margin: auto;">
+                                        <form onSubmit={(e) => { e.preventDefault(); submitNewPackaging(); }}>
+                                            <div>
+                                                <label for="qty">Qty:</label><br/>
+                                                <input
+                                                    id="qty"
+                                                    type="number"
+                                                    onChange={(e) => setQty(Number(e.currentTarget.value))}
+                                                    placeholder="Enter quantity..."
+                                                    required
                                                 />
-                                        </div>
-                                        <div>
-                                            <label for="unit">Unit:</label><br/>
-                                            <input
-                                                id="unit"
-                                                onChange={(e) => setUnit(e.currentTarget.value)}
-                                                placeholder="Enter unit..."
-                                                required
-                                                />
-                                        </div>
-                                        <button type="submit">Add Packaging</button>
-                                    </form>
+                                            </div>
+                                            <div>
+                                                <label for="units-per-qty">Units/Qty:</label><br/>
+                                                <input
+                                                    id="units-per-qty"
+                                                    type="number"
+                                                    min="0.001"
+                                                    step="0.001"
+                                                    onChange={(e) => setUnitsPerQty(Number(e.currentTarget.value))}
+                                                    placeholder="Enter Units/Qty..."
+                                                    required
+                                                    />
+                                            </div>
+                                            <div>
+                                                <label for="unit">Unit:</label><br/>
+                                                <input
+                                                    id="unit"
+                                                    onChange={(e) => setUnit(e.currentTarget.value)}
+                                                    placeholder="Enter unit..."
+                                                    required
+                                                    />
+                                            </div>
+                                            <button type="submit">Add Packaging</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </Show>

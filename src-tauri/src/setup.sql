@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS item_transfers (
     time INTEGER NOT NULL,
     added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
     PRIMARY KEY (id),
-    FOREIGN KEY (item_id) REFERENCES items(id),
+    FOREIGN KEY (item_id) REFERENCES packaged_item(id),
     FOREIGN KEY (to_entity_id) REFERENCES entities(id),
     FOREIGN KEY (from_entity_id) REFERENCES entities(id)
 );

@@ -7,7 +7,7 @@ use tauri::State;
 #[derive(serde::Serialize)]
 enum TransferType {
     Currency,
-    // Item,
+    Item,
     // Asset,
     // Debt,
 }
@@ -84,15 +84,17 @@ fn db_get_transaction(transaction_id: u64, dbconn: State<DbConnection>) -> Resul
             m_latest_currency_transfer_datetime: None,
             m_latest_currency_transfer_id: None,
     })})?;
+
+    // Get Currency Transfers.
     stmt = locked.prepare_cached(
         "SELECT ct.id, ct.amount, e_to.id, e_to.name, e_from.id, e_from.name, ct.time 
-                FROM (SELECT * FROM currency_transfer_transaction_link cttl WHERE cttl.transaction_id = ?1) cttl
-                INNER JOIN currency_transfers ct ON cttl.transfer_id = ct.id
-                INNER JOIN entity_accounts ea_to ON ct.to_account = ea_to.id
-                INNER JOIN entity_accounts ea_from ON ct.from_Account = ea_from.id
-                INNER JOIN entities e_to ON ea_to.entity_id = e_to.id
-                INNER JOIN entities e_from ON ea_from.entity_id = e_from.id
-                ORDER BY ct.time DESC, ct.amount DESC, e_to.name ASC"
+        FROM (SELECT * FROM currency_transfer_transaction_link cttl WHERE cttl.transaction_id = ?1) cttl
+        INNER JOIN currency_transfers ct ON cttl.transfer_id = ct.id
+        INNER JOIN entity_accounts ea_to ON ct.to_account = ea_to.id
+        INNER JOIN entity_accounts ea_from ON ct.from_Account = ea_from.id
+        INNER JOIN entities e_to ON ea_to.entity_id = e_to.id
+        INNER JOIN entities e_from ON ea_from.entity_id = e_from.id
+        ORDER BY ct.time DESC, ct.amount DESC, e_to.name ASC"
     )?;
     let raw_transfers = stmt.query_map([transaction_id], |row| {
         Ok(TransferFE {
@@ -106,9 +108,35 @@ fn db_get_transaction(transaction_id: u64, dbconn: State<DbConnection>) -> Resul
             m_time: row.get(6)?,
         })
     })?;
-    let transfers: Vec<TransferFE> = raw_transfers.map(|transfer| {
+    let mut transfers: Vec<TransferFE> = raw_transfers.map(|transfer| {
         transfer.unwrap()
     }).collect();
+
+    // Get Item Transfers.
+    stmt = locked.prepare_cached(
+        "SELECT it.id, it.qty * it.per_qty_constituent_cost, e_to.id, e_to.name, e_from.id, e_from.name, it.time 
+        FROM (SELECT * FROM item_transfer_transaction_link ittl WHERE ittl.transaction_id = ?1) ittl
+        INNER JOIN item_transfers it ON ittl.transfer_id = it.id
+        INNER JOIN entities e_to ON it.to_entity_id = e_to.id
+        INNER JOIN entities e_from ON it.from_entity_id = e_from.id
+        ORDER BY it.time DESC, it.qty DESC, e_to.name ASC"
+    )?;
+    let raw_transfers = stmt.query_map([transaction_id], |row| {
+        Ok(TransferFE {
+            m_transfer_id: row.get(0)?,
+            m_type: TransferType::Item,
+            m_value: row.get(1)?,
+            m_to_id: row.get(2)?,
+            m_to_name: row.get(3)?,
+            m_from_id: row.get(4)?,
+            m_from_name: row.get(5)?,
+            m_time: row.get(6)?,
+        })
+    })?;
+    transfers.extend(raw_transfers.map(|transfer| {
+        transfer.unwrap()
+    }));
+
     Ok(DetailedTransactionFE { m_transaction: tranasction, m_transfers: transfers })
 }
 

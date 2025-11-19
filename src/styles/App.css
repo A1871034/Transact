@@ -273,14 +273,13 @@ button img {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: stretch;
   align-content: stretch;
 }
 
 .tile {
   flex-basis: content;
-  flex-grow: 1;
   margin: .5em;
   background-color: var(--tertiary-color);
   border-radius: .5em;
@@ -429,15 +428,6 @@ form {
   width: fit-content;
   border-radius: 0 0 0 0.5em;
   height: calc(100% + 1em);
-}
-
-#new-tx-content {
-  flex-direction: row;
-}
-
-#new-tx-content > div {
-  width: 100%;
-  padding: 1em;
 }
 
 div#transaction-transfers {

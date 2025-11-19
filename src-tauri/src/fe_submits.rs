@@ -219,3 +219,54 @@ pub fn submit_new_currency_transfer(amount: f32, to_account_id: u64, from_accoun
     println!("created currency_transfer with id={}", new_tx_id.clone()?);
     new_tx_id
 }
+
+#[tauri::command]
+pub fn submit_new_item_transfer(qty: f32, per_qty_constituent_cost: f32, packaging_id: u64, to_entity_id: u64, from_entity_id: u64, time: u64, transaction_id: u64, dbconn: State<DbConnection> ) -> Result<u64, String> {
+    println!("Submit: new_item_transfer amount={}, per_qty_constituent_cost={}, packaging_id={}, to_account={}, from_account={}, time={}, transaction={}", qty, per_qty_constituent_cost, packaging_id, to_entity_id, from_entity_id, time, transaction_id);
+    let new_tx_id = db_submit_new_item_transfer(qty, per_qty_constituent_cost, packaging_id, to_entity_id, from_entity_id, time, transaction_id, dbconn).map_err(|err| {
+            err.to_string()
+        });
+    println!("created item_transfer with id={}", new_tx_id.clone()?);
+    new_tx_id
+}
+
+fn db_submit_new_item_transfer(qty: f32, per_qty_constituent_cost: f32, packaging_id: u64, to_entity_id: u64, from_entity_id: u64, time: u64, transaction_id: u64, dbconn: State<DbConnection>) 
+    -> Result<u64, Box<dyn std::error::Error>> {
+    if to_entity_id == from_entity_id {
+        return Err("To and from entities must differ".into()); 
+    }
+    if qty == 0.0 {
+        return Err("Amount must be non-zero".into());
+    }
+    if per_qty_constituent_cost < 0.0 {
+        return Err("Per quanitity constituent cost must be >= 0".into());
+    }
+    let mut lock = dbconn.conn.lock().unwrap();
+
+    if  !(db_table_contains_id("entities", "id", to_entity_id, &lock)?) {
+        return Err("Could not find to account in TABLE entities".into());
+    }
+        
+    if  !(db_table_contains_id("entities", "id", from_entity_id, &lock)?) {
+        return Err("Could not find from account in TABLE entities".into());
+    }
+
+    let tx = lock.transaction()?;
+    let rows_affected = tx.execute(
+        "INSERT INTO item_transfers (item_id, qty, per_qty_constituent_cost, to_entity_id, from_entity_id, time) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        (packaging_id, qty, per_qty_constituent_cost, to_entity_id, from_entity_id, time)
+    )?;
+    if rows_affected != 1 {
+        return Err("Failed to INSERT INTO item_transfers".into())
+    }
+    let transfer_id = db_get_last_insert_rowid(&tx)?;
+    let rows_affected = tx.execute(
+        "INSERT INTO item_transfer_transaction_link (transfer_id, transaction_id) VALUES (?1, ?2)",
+        [transfer_id, transaction_id]
+    )?;
+    if rows_affected != 1 {
+        return Err("Failed to INSERT INTO item_transfer_transaction_link".into())
+    }
+    tx.commit()?;
+    Ok(transfer_id)
+}

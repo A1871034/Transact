@@ -79,9 +79,9 @@ function NewCurrencyTransfer(
     <form class="flex-row" onSubmit={(e) => { e.preventDefault(); submit() }}>
         <div>
             <div>
-                <label for="amount">Amount: </label>
                 <input
                     id="amount"
+                    title="Amount"
                     type="number"
                     step="0.01"
                     min="0.01"
@@ -93,9 +93,9 @@ function NewCurrencyTransfer(
             </div>
             <br/>
             <div>
-                <label for="date">Date: </label>
                 <input
                     id="date"
+                    title="Date"
                     type="Date"
                     min="1970-01-01"
                     onChange={(e) => setDate(e.currentTarget.value)}
@@ -104,9 +104,9 @@ function NewCurrencyTransfer(
             </div>
             <br/>
             <div>
-                <label for="time">Time: </label>
                 <input
                     id="time"
+                    title="Time"
                     type="Time"
                     onChange={(e) => setTime(e.currentTarget.value)}
                     required
@@ -130,13 +130,14 @@ function NewItemTransfer(
     callback: ((new_transfer_id: number) => void) = () => {}
     ): JSX.Element 
 {
-    const [amount, setAmount] = createSignal(-1);
+    const [qty, setQty] = createSignal(-1);
+    const [qtyCost, setQtyCost] = createSignal(-1);
     const [time, setTime] = createSignal<string>();
     const [date, setDate] = createSignal<string>();
     const [toEntityId, setToEntityId] = createSignal<number>();
     const [fromEntityId, setFromEntityId] = createSignal<number>();
     const [packagedItemId, setPackagedItemId] = createSignal<number>();
-    const [selectedUnit, setSelectedUnit] = createSignal("");
+    const [selectedPackaging, setSelectedPackaging] = createSignal("");
 
     const [searchEntities, setSearchEntities] = createSignal<dropdownEntry[]>();
     const [allItemPackagings, setAllItemPackagings] = createSignal<dropdownEntry[]>();
@@ -168,9 +169,9 @@ function NewItemTransfer(
                     setAllItemPackagings((recv as DetailedItemFE[]).map<dropdownEntry>((inp) => {return {
                         display: inp.m_item.m_name,
                         data: inp.m_packaged_items.map<dropdownEntry>((packed: PackagedItemFE) => {return {
-                            display: `${packed.m_qty} - ${packed.m_units_per_qty}${packed.m_unit}`,
+                            display: `${packed.m_qty}x ${packed.m_units_per_qty}${packed.m_unit}`,
                             data: undefined,
-                            data_onset: {id: packed.m_id, unit: packed.m_unit},
+                            data_onset: packed.m_id,
                             hover: undefined,
                         }}),
                         data_onset: undefined,
@@ -205,13 +206,15 @@ function NewItemTransfer(
         console.log(datetime);
         date_to_db_time(datetime);
         
-        console.log(amount());
+        console.log(qty());
         
         try {
             let res:number = await invoke("submit_new_item_transfer", {
-                amount: amount(),
-                toAccountId: toEntityId()!,
-                fromAccountId: fromEntityId()!,
+                qty: qty(),
+                perQtyConstituentCost: qtyCost(),
+                packagingId: packagedItemId(),
+                toEntityId: toEntityId()!,
+                fromEntityId: fromEntityId()!,
                 time: date_to_db_time(datetime),
                 transactionId: transaction_id
             });
@@ -232,7 +235,7 @@ function NewItemTransfer(
         return DropdownSearchL("From Entity...", searchEntities, (de: dropdownEntry) => setFromEntityId(de.data_onset));
     }, getOwner());
     const itemSearch = createRoot((): JSX.Element => {
-        return DropdownSearchL("Item...", allItemPackagings, (de: dropdownEntry) => {setPackagedItemId(de.data_onset.id); setSelectedUnit(de.data_onset.unit)});
+        return DropdownSearchL("Item...", allItemPackagings, (de: dropdownEntry) => {setPackagedItemId(de.data_onset); setSelectedPackaging(de.display)});
     }, getOwner());
 
     return createRoot((): JSX.Element => { return (
@@ -240,24 +243,36 @@ function NewItemTransfer(
         <div>
             {itemSearch}
             <br/>
-            <label for="qty">Quantity: </label>
             <input
                 id="qty"
+                title={((allItemPackagings() === undefined) || (packagedItemId() == undefined)) ? "Qty of Packages" : `Qty of (${selectedPackaging()})s`}
                 type="number"
-                step="0.000000001"
-                onChange={(e) => setAmount(Number(e.currentTarget.value))}
-                placeholder={`${((allItemPackagings() === undefined) || (packagedItemId() == undefined)) ? "Qty of item..." : selectedUnit() /*allItemPackagings()![itemId()!].m_item.*/}`}
+                step="1"
+                onChange={(e) => setQty(Number(e.currentTarget.value))}
+                placeholder={((allItemPackagings() === undefined) || (packagedItemId() == undefined)) ? "Qty of Packages" : `Qty of (${selectedPackaging()})s`}
                 // disabled={((items() === undefined) || (itemId() == undefined)) ? true : false}
                 class="rm-spinner"
                 required
                 autofocus
                 />
+            <br/>
+            <input
+                id="cost"
+                title="Cost per packaging"
+                type="number"
+                step="0.0000001"
+                onChange={(e) => setQtyCost(Number(e.currentTarget.value))}
+                placeholder="$ per Package"
+                // disabled={((items() === undefined) || (itemId() == undefined)) ? true : false}
+                class="rm-spinner"
+                required
+            />
         </div>
         <div>
             <div>
-                <label for="date">Date: </label>
                 <input
                     id="date"
+                    title="Date"
                     type="Date"
                     min="1970-01-01"
                     onChange={(e) => setDate(e.currentTarget.value)}
@@ -266,9 +281,9 @@ function NewItemTransfer(
             </div>
             <br/>
             <div>
-                <label for="time">Time: </label>
                 <input
                     id="time"
+                    title="Time"
                     type="Time"
                     onChange={(e) => setTime(e.currentTarget.value)}
                     required
