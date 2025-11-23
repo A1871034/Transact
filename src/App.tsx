@@ -12,6 +12,7 @@ import Transactions from './pages/Transactions';
 import Entities from './pages/Entities';
 import Settings from "./pages/Settings";
 import Items from "./pages/Items";
+import Brands from "./pages/Brands";
 
 /* Themes */
 const [darkMode, setDarkMode] = createSignal(true);
@@ -104,6 +105,12 @@ function App() {
       "icon": "/icons/person-shelter-solid.svg",
       "name": "Entites",
       "component": Entities,
+    },
+    "/brands": {
+      "path": "/brands",
+      "icon": "/icons/industry-solid-full.svg",
+      "name": "Brands",
+      "component": Brands,
     },
     "/jobs": {
       "path": "/jobs",

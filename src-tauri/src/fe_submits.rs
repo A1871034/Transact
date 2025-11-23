@@ -27,6 +27,17 @@ fn db_submit_new_entity(name: &str, description: &str, dbconn: State<DbConnectio
     Ok(rowid)
 }
 
+fn db_submit_new_brand(name: &str, dbconn: State<DbConnection>) -> Result<u64, Box<dyn std::error::Error>>{
+    let mut lock = dbconn.conn.lock().unwrap();
+    let tx = lock.transaction()?;
+    tx.execute(
+        "INSERT INTO brands (name) VALUES (?1)", 
+        [name])?;
+    let rowid = db_get_last_insert_rowid(&tx)?;
+    tx.commit()?;
+    Ok(rowid)
+}
+
 fn db_submit_new_account(name: &str, entity_id: u64, dbconn: State<DbConnection>) -> Result<u64, Box<dyn std::error::Error>>{
     let mut lock = dbconn.conn.lock().unwrap();
     let tx = lock.transaction()?;
@@ -62,12 +73,12 @@ fn db_update_transaction_details(tx_id: u64, name: &str, description: &str, clos
     Ok(true)
 }
 
-fn db_submit_new_item(name: &str, description: &str, dbconn: State<DbConnection>) -> Result<u64, Box<dyn std::error::Error>>{
+fn db_submit_new_item(name: &str, brand_id: u64, description: &str, dbconn: State<DbConnection>) -> Result<u64, Box<dyn std::error::Error>>{
     let mut lock = dbconn.conn.lock().unwrap();
     let tx = lock.transaction()?;
     tx.execute(
-        "INSERT INTO items (name, description) VALUES (?1, ?2)", 
-        [name, description])?;
+        "INSERT INTO items (name, brand_id, description) VALUES (?1, ?2, ?3)", 
+        [name, brand_id.to_string().as_str(), description])?;
     let rowid = db_get_last_insert_rowid(&tx)?;
     tx.commit()?;
     Ok(rowid)
@@ -88,6 +99,15 @@ fn db_submit_new_item_packaging(item_id: u64, qty: u64, unit: &str, units_per_qt
 pub fn submit_new_entity(name: &str, description: &str, dbconn: State<DbConnection> ) -> Result<u64, String> {
     println!("Submit: new_entity name={}, description={}", name, description);
     db_submit_new_entity(&name, &description, dbconn)
+        .map_err(|err| {
+            err.to_string()
+        })
+}
+
+#[tauri::command]
+pub fn submit_new_brand(name: &str, dbconn: State<DbConnection> ) -> Result<u64, String> {
+    println!("Submit: new_brand name={}", name, );
+    db_submit_new_brand(&name, dbconn)
         .map_err(|err| {
             err.to_string()
         })
@@ -147,9 +167,9 @@ pub fn submit_delete_entity(id: u64, dbconn: State<DbConnection>) -> Result<u64,
 }
 
 #[tauri::command]
-pub fn submit_new_item(name: &str, description: &str, dbconn: State<DbConnection> ) -> Result<u64, String> {
-    println!("Submit: new_item name={}, description={}", name, description);
-    db_submit_new_item(&name, &description, dbconn)
+pub fn submit_new_item(name: &str, brand_id: u64, description: &str, dbconn: State<DbConnection> ) -> Result<u64, String> {
+    println!("Submit: new_item name={}, brand={}, description=\"{}\"", name, brand_id.to_string().as_str(), description);
+    db_submit_new_item(&name, brand_id, &description, dbconn)
         .map_err(|err| {
             err.to_string()
         })
@@ -269,4 +289,23 @@ fn db_submit_new_item_transfer(qty: f32, per_qty_constituent_cost: f32, packagin
     }
     tx.commit()?;
     Ok(transfer_id)
+}
+
+#[tauri::command]
+pub fn update_item_details (item_id: u64, name: &str, brand_id: u64, description: &str, dbconn: State<DbConnection> ) -> Result<bool, String> {
+    println!("Submit: update_item_details name={}, brand={}, description=\"{}\"", name, brand_id.to_string().as_str(), description);
+    db_update_item_details(item_id, &name, brand_id, &description, dbconn)
+        .map_err(|err| {
+            err.to_string()
+        })
+}
+
+fn db_update_item_details(item_id: u64,name: &str, brand_id: u64, description: &str, dbconn: State<DbConnection>) -> Result<bool, Box<dyn std::error::Error>>{
+    let affected = dbconn.conn.lock().unwrap().execute(
+        "UPDATE items SET name = ?1, brand_id = ?2, description = ?3 WHERE id = ?4", 
+        [name, brand_id.to_string().as_str(), description, item_id.to_string().as_str()])?;
+    if affected != 1 {
+        return Err(format!("Unexpected number of rows affected ({}).", affected).into());
+    }
+    Ok(true)
 }

@@ -1,3 +1,14 @@
+CREATE TABLE IF NOT EXISTS brands (
+    id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
+    PRIMARY KEY (id)
+);
+
+INSERT OR IGNORE INTO brands (id, name) VALUES
+    (0, "Unkown"),
+    (1, "N/A");
+
 CREATE TABLE IF NOT EXISTS entities (
     id INTEGER NOT NULL,
     name TEXT NOT NULL,
@@ -54,9 +65,9 @@ CREATE TABLE IF NOT EXISTS items (
     name TEXT NOT NULL,
     description TEXT,
     added INTEGER NOT NULL DEFAULT (cast(strftime('%s', 'now') as int)),
+    brand_id INTEGER NOT NULL,
     PRIMARY KEY (id)
 );
-    -- brand_id INTEGER NOT NULL,
     -- category_id INTEGER NOT NULL,
 
 CREATE TABLE IF NOT EXISTS packaged_item (

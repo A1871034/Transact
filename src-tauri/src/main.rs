@@ -42,12 +42,14 @@ fn main() {
             get_transaction,
             get_transactions,
             get_entities,
+            get_brands,
             get_bare_entities,
             get_item,
             get_items,
             // get_bare_items,
             get_all_packaged_items,
             submit_new_entity,
+            submit_new_brand,
             submit_new_account,
             submit_new_transaction,
             update_transaction_details,
@@ -57,6 +59,7 @@ fn main() {
             submit_delete_entity,
             submit_new_item,
             submit_new_item_packaging,
+            update_item_details,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

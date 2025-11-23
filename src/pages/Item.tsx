@@ -1,10 +1,11 @@
-import { createRoot, createSignal, Show, JSX, For } from "solid-js";
+import { createRoot, createSignal, Show, JSX, For, getOwner } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 
-import { DetailedItemFE, PackagedItemFE } from "../FrontEndTypes";
-import { database_time_to_string, get_time_as_if_database } from "../Utils";
+import { BrandFE, DetailedItemFE, PackagedItemFE } from "../FrontEndTypes";
+import { database_time_to_string } from "../Utils";
 
 import { closeOverlay, showOverlay } from "../components/Overlay";
+import { dropdownEntry, DropdownSearchL } from "../components/DropdownSearch";
 
 async function get_item(item_id: number) {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -17,6 +18,8 @@ export function showItemOverlay(item_id: number) {
     const [showNewPackage, setShowNewPackage] = createSignal<boolean>(false);
 
     const [itemName, setItemName] = createSignal<string>();
+    const [itemBrand, setItemBrand] = createSignal<string>("");
+    const [itemBrandId, setItemBrandId] = createSignal<number>(-1);
     const [itemDesc, setItemDesc] = createSignal<string>();
 
     const [qty, setQty] = createSignal<number>(0);
@@ -24,6 +27,37 @@ export function showItemOverlay(item_id: number) {
     const [unitsPerQty, setUnitsPerQty] = createSignal<number>(0);
     
     const [editingItem, setEditingItem] = createSignal(false);
+    const [searchBrands, setSearchBrands] = createSignal<dropdownEntry[]>();
+    const [selectedBrand, setSelectedBrand] = createSignal<string>("");
+    const [selectedBrandId, setSelectedBrandId] = createSignal<number>(-1);
+
+
+    async function getSearchBrands() {
+        await invoke("get_brands")
+            .then((recv_entities) => {
+                if (recv_entities instanceof Array) {
+                    setSearchBrands((recv_entities as BrandFE[]).map<dropdownEntry>(
+                        (entity) => {return {
+                            display: entity.m_name,
+                            data: undefined,
+                            data_onset: entity.m_id,
+                            hover: undefined,
+                        }}
+                    ));
+                    console.debug("received bare entities: ", searchBrands());           
+                } else {
+                    throw "Received entities are not an array"
+                }
+            })
+            .catch((error) => console.error(error));
+    };
+    getSearchBrands()
+    const brandsSearch = createRoot((): JSX.Element => {
+        return DropdownSearchL(itemBrand(), searchBrands, (de: dropdownEntry) => {
+            setSelectedBrandId(de.data_onset)
+            setSelectedBrand(de.display)
+        });
+    }, getOwner());
 
     function toggleShowNewPackage() {
         if (showNewPackage()) {
@@ -52,18 +86,24 @@ export function showItemOverlay(item_id: number) {
                 let new_description = (document.getElementById("tx-description-input")! as HTMLTextAreaElement).value;
                 
                 if (((new_name.length != 0) && (new_name != item.m_item.m_name)) || 
-                    ((new_description.length != 0) && (new_description != item.m_item.m_description)))
+                    ((new_description.length != 0) && (new_description != item.m_item.m_description)) ||
+                    ((selectedBrandId() != -1) && (selectedBrandId() != itemBrandId())))
                 {
                     new_name = (new_name.length == 0) ? item.m_item.m_name : new_name;
                     new_description = (new_description.length == 0) ? item.m_item.m_description : new_description;
-                    console.debug(`Attempting to update item ${item.m_item.m_name} with\n\tid: ${item.m_item.m_id}\n\tnew_name: ${new_name}\n\tnew_description: ${new_description}`);
+                    let new_brand = (selectedBrandId() == -1) ? itemBrand() : selectedBrand();
+                    let new_brand_id = (selectedBrandId() == -1) ? itemBrandId() : selectedBrandId();
+                    console.debug(`Attempting to update item ${item.m_item.m_name} with\n\tid: ${item.m_item.m_id}\n\tnew_name: ${new_name}\n\tnew_brand_id: ${new_brand_id}\n\tnew_description: ${new_description}`);
                     await invoke("update_item_details", {
                         itemId: item.m_item.m_id,
                         name: new_name,
+                        brandId: new_brand_id,
                         description: new_description,
                     }).then(() => {
                         item.m_item.m_name = new_name;
                         item.m_item.m_description = new_description;
+                        setItemBrand(new_brand);
+                        setItemBrandId(new_brand_id);
                         setItemName(new_name);
                         setItemDesc(new_description);
                         setEditingItem(false);
@@ -76,18 +116,22 @@ export function showItemOverlay(item_id: number) {
                 }
             } else {
                 setEditingItem(true);
+                setSelectedBrand("");
+                setSelectedBrandId(-1);
             }
     }  
 
     function newItemPage() {
         setShowNewPackage(false);
         get_item(item_id).then((item) => {
+            setItemBrand(item.m_item.m_brand);
+            setItemBrandId(item.m_item.m_brand_id);
             setItemName(item.m_item.m_name);
             setItemDesc(item.m_item.m_description);
             const Item = createRoot((): JSX.Element => {
                 return (
                     <div class="tile-container">
-                        <div class="tile ta-c hide-overflow">
+                        <div class="tile ta-c">
                             <div id="transaction-transfers">
                                 <table class="dashboard-item" style="margin-bottom: 1em;">
                                     <colgroup>
@@ -106,23 +150,27 @@ export function showItemOverlay(item_id: number) {
                                     <tbody> 
                                         <tr>
                                             <td>Name</td>
-                                            <Show when={editingItem()} fallback={
-                                                    <>
-                                                        <td>{itemName()}</td>
-                                                    </>
-                                                }>
-                                                <input placeholder={itemName()} id="tx-name-input"/>
-                                            </Show>
+                                            <td>
+                                                <Show when={editingItem()} fallback={<>{itemName()}</>}>
+                                                    <input placeholder={itemName()} id="tx-name-input"/>
+                                                </Show>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Brand</td>
+                                            <td>
+                                                <Show when={editingItem()} fallback={<>{itemBrand()}</>}>
+                                                    {brandsSearch}
+                                                </Show>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td>Description</td>
-                                            <Show when={editingItem()} fallback={
-                                                    <>
-                                                        <td>{itemDesc()}</td>
-                                                    </>
-                                                }>
-                                                <textarea placeholder={itemDesc()} id="tx-description-input"/>
-                                            </Show>
+                                            <td>
+                                                <Show when={editingItem()} fallback={<>{itemDesc()}</>}>
+                                                    <textarea placeholder={itemDesc()} id="tx-description-input"/>
+                                                </Show>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td>Packagings</td>

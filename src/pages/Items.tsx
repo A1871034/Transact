@@ -27,9 +27,9 @@ function Items() {
             </colgroup>
             <thead>
                 <tr class="table-header-row">
-                    <th>Transaction</th>
-                    <th>Description</th>
+                    <th>Name</th>
                     <th>Brand</th>
+                    <th>Description</th>
                     <th>Leaf Category</th>
                 </tr>
             </thead>
@@ -38,8 +38,8 @@ function Items() {
                 {(item:ItemFE, _) => (
                     <tr onclick={() => {showItemOverlay(item.m_id)}}>
                         <td>{item.m_name}</td>
+                        <td>{item.m_brand}</td>
                         <td>{(item.m_description.length > 47) ? item.m_description.slice(0, 47).trimEnd() + "..." : item.m_description}</td>
-                        <td>Unimplemented</td>
                         <td>Unimplemented</td>
                     </tr>
                 )}

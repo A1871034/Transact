@@ -223,6 +223,39 @@ pub fn get_bare_entities(dbconn: State<DbConnection>) -> Result<Vec<BareEntityFE
     })
 }
 
+// Entities list endpoint
+#[derive(serde::Serialize)]
+#[derive(Debug)]
+pub struct BrandFE {
+    m_id: u64,
+    m_name: String,
+}
+
+fn db_get_brands(dbconn: State<DbConnection>) -> Result<Vec<BrandFE>, Box<dyn std::error::Error>> {
+    let locked = dbconn.conn.lock().unwrap();
+    let mut stmt = locked.prepare_cached(
+        "SELECT id, name FROM brands")?;
+    let raw_brands = stmt.query_map([], |row| {
+        Ok(BrandFE {
+            m_id: row.get(0)?,
+            m_name: row.get(1)?,
+        })
+    })?;
+    let brands: Vec<BrandFE> = raw_brands.map(|result_brand| {
+        result_brand.unwrap()
+    }).collect();
+    Ok(brands)
+}
+    
+#[tauri::command]
+pub fn get_brands(dbconn: State<DbConnection>) -> Result<Vec<BrandFE>, String> {
+    println!("Get: bare_brands");
+    let res = db_get_brands(dbconn);
+    res.map_err(|err| {
+        err.to_string()
+    })
+}
+
 #[tauri::command]
 pub fn get_entities(dbconn: State<DbConnection>) -> Result<Vec<EntityFE>, String> {
     println!("Get: entities");
@@ -310,9 +343,10 @@ pub fn get_bare_accounts(dbconn: State<DbConnection>) -> Result<Vec<BareAccountF
 pub struct ItemFE {
     m_id: u64,
     m_name: String,
+    m_brand: String,
+    m_brand_id: u64,
     m_description: String,
     // m_category_id: u64,
-    // m_brand_id: u64,
     m_created: u64,
 }
 
@@ -328,14 +362,16 @@ pub fn get_items(dbconn: State<DbConnection>) -> Result<Vec<ItemFE>, String> {
 fn db_get_items(dbconn: State<DbConnection>) -> Result<Vec<ItemFE>, Box<dyn std::error::Error>> {
     let lock = dbconn.conn.lock().unwrap();
     let mut stmt = lock.prepare_cached(
-        "SELECT i.id, i.name, i.description, i.added FROM items i;"
+        "SELECT i.id, i.name, b.name, i.brand_id, i.description, i.added FROM items i LEFT JOIN brands b on b.id = i.brand_id;"
     )?;
     let raw_items = stmt.query_map([], |row| {
         Ok(ItemFE {
             m_id: row.get(0)?,
             m_name: row.get(1)?,
-            m_description: row.get(2)?,
-            m_created: row.get(3)?,
+            m_brand: row.get(2)?,
+            m_brand_id: row.get(3)?,
+            m_description: row.get(4)?,
+            m_created: row.get(5)?,
         })
     })?;
     let items: Vec<ItemFE> = raw_items.map(|result_account| {
@@ -365,12 +401,14 @@ pub struct DetailedItemFE {
 fn db_get_item(item_id: u64, dbconn: State<DbConnection>) -> Result<DetailedItemFE, Box<dyn std::error::Error>> {
     let locked = dbconn.conn.lock().unwrap();
     let mut stmt = locked.prepare_cached(
-        "SELECT id, name, description, added FROM items WHERE id = ?1 LIMIT 1")?;
+        "SELECT i.id, i.name, b.name, i.brand_id, i.description, i.added FROM items i LEFT JOIN brands b on b.id = i.brand_id WHERE i.id = ?1 LIMIT 1")?;
     let item = stmt.query_row([item_id], |row| { Ok(ItemFE{
         m_id: row.get(0)?,
         m_name: row.get(1)?,
-        m_description: row.get(2)?,
-        m_created: row.get(3)?,
+        m_brand: row.get(2)?,
+        m_brand_id: row.get(3)?,
+        m_description: row.get(4)?,
+        m_created: row.get(5)?,
     })})?;
     stmt = locked.prepare_cached(
         "SELECT p.id, p.qty, p.unit, p.units_per_qty, p.added FROM packaged_item p WHERE p.item_id = ?1"
@@ -433,13 +471,16 @@ fn db_get_all_packaged_items(dbconn: State<DbConnection>) -> Result<Vec<Detailed
         }
         println!("MAP: {:?}", packagings);
         stmt = lock.prepare_cached(
-            "SELECT id, name, description, added FROM items ORDER BY name ASC")?;
-            let raw_items = stmt.query_map([], |row| { Ok(ItemFE{
-                m_id: row.get(0)?,
-                m_name: row.get(1)?,
-                m_description: row.get(2)?,
-                m_created: row.get(3)?,
-            })})?;
+            "SELECT i.id, i.name, b.name, i.brand_id, i.description, i.added FROM items i LEFT JOIN brands b on b.id = i.brand_id ORDER BY i.name ASC;"
+        )?;
+        let raw_items = stmt.query_map([], |row| { Ok(ItemFE{
+            m_id: row.get(0)?,
+            m_name: row.get(1)?,
+            m_brand: row.get(2)?,
+            m_brand_id: row.get(3)?,
+            m_description: row.get(4)?,
+            m_created: row.get(5)?,
+        })})?;
         items = raw_items.map(|item| {
             let item = item.unwrap();
             println!("ITEM: {:?}", item);

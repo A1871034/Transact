@@ -23,6 +23,11 @@ interface BareItemFE {
     m_unit: string,
 }
 
+interface BrandFE {
+    m_id: number,
+    m_name: string,
+}
+
 interface DetailedItemFE {
     m_item: ItemFE,
     m_packaged_items: [PackagedItemFE],
@@ -46,9 +51,10 @@ interface EntityFE {
 interface ItemFE {
     m_id: number,
     m_name: string,
+    m_brand: string,
+    m_brand_id: number,
     m_description: string,
     // m_category_id: number,
-    // m_brand_id: number,
     m_created: number,
 }
 
@@ -94,6 +100,7 @@ export type {
     BareAccountFE,
     BareEntityFE,
     BareItemFE,
+    BrandFE,
     DetailedItemFE,
     DetailedTransactionFE,
     EntityFE, 
