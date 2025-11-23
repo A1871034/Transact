@@ -1,10 +1,7 @@
+import { Portal } from 'solid-js/web';
 import '../styles/DropdownSearch.css'
 
-import { createComputed, createEffect, createSignal, For, JSX, Show, Accessor } from 'solid-js';
-
-// TODO: Add support for arbitrary depth recursive dropdowns.
-//  Interface with vec instead of accessor? i.e. "interface A {cur: T[], nxt: A}".
-//  Ideally support for either or.
+import { createComputed, createEffect, createSignal, For, JSX, Show, Accessor, onMount, onCleanup } from 'solid-js';
 
 // TODO: Add function to close the dropdown?.
 
@@ -21,7 +18,6 @@ function DropdownSearchL(
     set_lambda: Function,
 ): JSX.Element {
     const [selectedStr, setSelectedStr] = createSignal("None Selected...");
-    const [prevFilterBy, setPrevFilterBy] = createSignal<string | undefined>(undefined);
     const [filterBy, setFilterBy] = createSignal("");
     const [items, setItems] = createSignal<dropdownEntry[]>([]);
     const [displayDropdown, setDisplayDropdown] = createSignal(false);
@@ -37,6 +33,7 @@ function DropdownSearchL(
     const no_search_results_text = "Nothing to Display";
 
     let allDropdowns: HTMLDivElement | undefined;
+    let dropdownSearch: HTMLDivElement | undefined;
 
     function filterFunc() {
         if (entries() === undefined) {return}
@@ -91,61 +88,14 @@ function DropdownSearchL(
         setKeyboardHoverIdx(undefined);
     }
 
-    let dropdownRef: HTMLUListElement | undefined;
-
-    // TODO: Create reorientDropdown function which only adjusts height if above and left placement if on left (all on filter update).
-    function orientDropdown() {
-        if (dropdownRef === undefined) { return }
-        dropdownRef = dropdownRef!;
-        let covering = false;
-
-        // Reorient to default location
-        dropdownRef.style.top = "-1em";
-        dropdownRef.style.left = "100%";
-
-        let rect = dropdownRef.getBoundingClientRect();
-        const parent_rect = dropdownRef.parentElement!.getBoundingClientRect();
-
-        // Check horizontal bounds.
-        if ((rect.width + rect.x) > window.innerWidth) {
-            // Too big on right, attempt to orient left.
-            if ((rect.x - parent_rect.width - rect.width) > 0) {
-                dropdownRef.style.left = `-${rect.width}px`;
-            } else {
-                // Still too large, center it.
-                dropdownRef.style.left = `calc(50% - ${rect.width / 2}px)`;
-
-                // Move vertically to try and uncover dropdown area.
-                dropdownRef.style.top = "calc(100% - 1em)";
-                rect = dropdownRef.getBoundingClientRect();
-
-                covering = true;
-            }
-        }
-
-        // Check vertical bounds.
-        if ((rect.height + rect.y) > window.innerHeight) {
-            // Overflows bottom.
-            // If we are covering attempt to place it above, otherwise as low as possible.
-            if (covering && ((rect.y - parent_rect.height - rect.height) > 0)) {
-                dropdownRef.style.top = `calc(-1em - ${rect.height}px)`;
-            }
-            else {
-                dropdownRef.style.top = `calc(-1em - ${parent_rect.y + rect.height - window.innerHeight}px)`;
-            }
-        }
-    }
-
     function openDropdown() {
         setDisplayDropdown(true);
-        orientDropdown();
+        setTimeout(updateDropdownPos, 0);
     }
 
     function dsKeyboardControls(e: KeyboardEvent) {
-        let stop_bubble = true;
         switch (e.key) {
             case "Escape":
-                stop_bubble = true;
                 if (!displayDropdown()) {
                     (e.target as (HTMLInputElement | null))?.blur();
                     break;
@@ -156,7 +106,6 @@ function DropdownSearchL(
                 break;
             case "Enter": // TODO: UPDATE
                 e.preventDefault();
-                stop_bubble = true;
 
                 // Open the dropdown if there is none.
                 if (!displayDropdown()) {
@@ -283,7 +232,6 @@ function DropdownSearchL(
                 }
             case "ArrowLeft":
                 if (!keyboardMode() || (allDropdowns === undefined)) {break}
-                stop_bubble = true;
                 e.preventDefault();
 
                 if (selectedIdxs().length == 0) {
@@ -336,14 +284,12 @@ function DropdownSearchL(
                 // TODO: Expand to submenu? might need to leave this to enter...
                 break;
             default:
-                stop_bubble = false;
-                break;
+                return;
         }
 
-        if (stop_bubble) {
-            e.stopPropagation();
-        }
-    }
+        setTimeout(updateDropdownPos, 0);
+        e.stopPropagation();
+}
 
     function conditionalScrollToY(elem: HTMLLIElement) {
         if (elem.parentElement === undefined) {
@@ -442,14 +388,49 @@ function DropdownSearchL(
         </>
     }
 
+    function updateDropdownPos() {
+        if (dropdownSearch === undefined)
+            return
+        
+        let bodyRect = document.body.getClientRects()[0]
+        let rect = dropdownSearch.getBoundingClientRect();
+        let xDest = rect.x + rect.width;
+        let yDest = rect.y;
+
+        if ((allDropdowns !== undefined) && (allDropdowns.childElementCount > 0)) {
+            let firstChildRect = allDropdowns.children[0].getBoundingClientRect();
+            let lastChildRect = allDropdowns.children[allDropdowns.childElementCount - 1].getBoundingClientRect();
+            var dropdownHeight = firstChildRect.height;
+            var dropdownWidth = lastChildRect.x - firstChildRect.x + lastChildRect.width;
+            xDest = xDest - Math.max(xDest + dropdownWidth - bodyRect.width, 0);
+            yDest = yDest - Math.max(yDest + dropdownHeight - bodyRect.height, 0);
+            allDropdowns.style = `opacity: 100%; left: ${xDest}px; top: ${yDest}px;`;
+        }
+    }
+
+    onMount(() => {
+        window.addEventListener('resize', updateDropdownPos);
+        document.getElementById("overlay")?.addEventListener('scroll', updateDropdownPos);
+        setTimeout(() => updateDropdownPos(), 0);
+    });
+
+    onCleanup(() => {
+        window.removeEventListener('resize', updateDropdownPos);
+        document.getElementById("overlay")?.removeEventListener('scroll', updateDropdownPos);
+    })
+
     return (<>
-        <div class="dropdown-search"
-            onkeydown={dsKeyboardControls}>
+        <div class="dropdown-search" onkeydown={dsKeyboardControls} 
+            ref={dropdownSearch}
+        >
             <div>
                 <input
                     class="ds-search"
                     type="text"
-                    onclick={(e) => { e.stopImmediatePropagation(); openDropdown(); }}
+                    onclick={(e) => {
+                        e.stopImmediatePropagation();
+                        openDropdown(); 
+                    }}
                     onFocusIn={openDropdown}
                     onFocusOut={looseFocus}
                     oninput={(e) => {
@@ -457,7 +438,7 @@ function DropdownSearchL(
                         if (!displayDropdown()) {
                             openDropdown();
                         } else {
-                            orientDropdown();
+                            setTimeout(updateDropdownPos, 0);
                         }
                     }}
                     placeholder={placeholder}
@@ -466,12 +447,15 @@ function DropdownSearchL(
                     {selectedStr()}
                 </div>
             </div>
+        </div>
+
+        <Portal mount={document.body}>
             <Show when={displayDropdown()}>
-                <div ref={allDropdowns} class="ds-all-dropdowns">
+                <div ref={allDropdowns} class="ds-all-dropdowns transparent">
                     {getSublevels(items(), 0, "")}
                 </div>
             </Show>
-        </div>
+        </Portal>
     </>)
 }
 

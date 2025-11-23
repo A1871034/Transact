@@ -460,3 +460,7 @@ div#transaction-transfers {
 .hide-overflow {
   overflow: hidden;
 }
+
+.transparent {
+  opacity: 0;
+}
